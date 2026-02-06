@@ -92,7 +92,7 @@
       Unlock,
       Zap,
       Shield,
-      FileText,
+
       Globe,
       Camera,
       Monitor,
@@ -103,7 +103,7 @@
       PieChart,
       BarChart3,
       BarChart,
-      FileText: LucideFileText,
+      FileText as LucideFileText,
       Download,
       TrendingDown,
       Target,
@@ -753,7 +753,160 @@
       { id: 'msg-init', sender: 'system', text: 'Hola Joan, soy el sistema híbrido de asistencia. Tanto la IA como Jordi Cruyff tienen acceso a este chat para darte el mejor servicio.', time: 'Hoy' }
     ];
 
+    // --- DATA MOCKUP UPGRADE ---
+    const ACTIVE_EVENTS = [
+      { id: 1, title: 'Tech Barcelona Meetup', location: 'Pier 01', time: '18:00', type: 'Networking', attendees: 45 },
+      { id: 2, title: 'Inversión Deportiva', location: 'Sala Roma', time: '19:30', type: 'Conferencia', attendees: 120 },
+      { id: 3, title: 'Afterwork VIP', location: 'Terraza Camp Nou', time: '21:00', type: 'Social', attendees: 30 }
+    ];
+
+    // --- HOME UPGRADE COMPONENTS ---
+    const SmartHero = ({ userData, t, onEventsClick }) => {
+      const stats = { events: 3, match: 98, meetings: 2 };
+
+      const handleBackNavigation = () => {
+        try {
+          if (window.history && window.history.length > 1) {
+            window.history.back();
+          } else {
+            window.history.go(-1);
+          }
+        } catch (e) {
+          console.log("No previous screen available");
+        }
+      };
+
+      return (
+        <div className="w-full mb-6 animate-fadeIn">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Hoy puedes:</span>
+            <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-bold border border-amber-500/20 flex items-center gap-1 animate-pulse">
+              <Zap size={10} fill="currentColor" /> Día Clave Networking
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div
+              onClick={(e) => {
+                if (onEventsClick) onEventsClick(e);
+                handleBackNavigation();
+              }}
+              role="button"
+              aria-label="Volver a la pantalla anterior"
+              className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex items-center gap-3 hover:bg-slate-800 transition-colors cursor-pointer group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-blue-900/20 text-blue-400 flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform"><Users size={18} /></div>
+              <div className="flex flex-col"><span className="text-[10px] text-slate-400 font-bold uppercase">Networking Fuerte</span><span className="text-sm font-bold text-white leading-tight">3 Eventos Activos</span></div>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex items-center gap-3 hover:bg-slate-800 transition-colors cursor-pointer group">
+              <div className="w-10 h-10 rounded-lg bg-emerald-900/20 text-emerald-400 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 transition-transform"><Target size={18} /></div>
+              <div className="flex flex-col"><span className="text-[10px] text-slate-400 font-bold uppercase">Match Potencial</span><span className="text-sm font-bold text-white leading-tight">98% Afinidad</span></div>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex items-center gap-3 hover:bg-slate-800 transition-colors cursor-pointer group">
+              <div className="w-10 h-10 rounded-lg bg-purple-900/20 text-purple-400 flex items-center justify-center border border-purple-500/20 group-hover:scale-110 transition-transform"><Calendar size={18} /></div>
+              <div className="flex flex-col"><span className="text-[10px] text-slate-400 font-bold uppercase">Tu Agenda</span><span className="text-sm font-bold text-white leading-tight">2 Reuniones</span></div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const QuickActions = () => {
+      const actions = [
+        { id: 1, label: 'Oportunidades', icon: Search, color: 'text-blue-400', click: () => console.log('Detectando...') },
+        { id: 2, label: 'Asistentes Hoy', icon: Users, color: 'text-green-400', click: () => console.log('Asistentes...') },
+        { id: 3, label: 'Proponer Reunión', icon: MessageSquare, color: 'text-purple-400', click: () => console.log('Reunión...') },
+        { id: 4, label: 'Experiencia VIP', icon: Crown, color: 'text-amber-400', click: () => console.log('VIP...') }
+      ];
+      return (
+        <div className="w-full mb-8 animate-fadeIn">
+          <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+            <Zap size={18} className="text-amber-500" /> Acciones Clave
+          </h3>
+          <div className="grid grid-cols-4 gap-2">
+            {actions.map(act => (
+              <button key={act.id} onClick={act.click} className="flex flex-col items-center justify-center p-3 bg-slate-900 border border-slate-800 rounded-xl hover:border-amber-500/30 hover:bg-slate-800 transition-all group">
+                <div className={`mb-2 p-2 rounded-full bg-slate-950 border border-slate-800 group-hover:scale-110 transition-transform ${act.color}`}><act.icon size={16} /></div>
+                <span className="text-[9px] font-bold text-slate-400 text-center leading-tight group-hover:text-white">{act.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    const NetworkingPipeline = () => {
+      return (
+        <div className="w-full mt-4 mb-8 bg-slate-900 border border-slate-800 rounded-xl p-5 animate-fadeIn relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+          <div className="flex justify-between items-center mb-4 relative z-10">
+            <h4 className="text-amber-500 text-xs font-bold uppercase tracking-wider flex items-center gap-2"><Target size={14} /> Pipeline Semanal</h4>
+            <span className="text-[10px] text-slate-400 font-mono">2/5 Completado</span>
+          </div>
+          <div className="w-full bg-slate-800 h-1.5 rounded-full mb-5 overflow-hidden">
+            <div className="bg-gradient-to-r from-amber-600 to-amber-400 h-full rounded-full w-2/5 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+          </div>
+          <div className="space-y-3 relative z-10">
+            <div className="flex items-center justify-between text-xs group cursor-pointer">
+              <div className="flex items-center gap-3 text-slate-300 group-hover:text-white transition-colors">
+                <div className="w-4 h-4 rounded-full bg-green-500/20 text-green-500 flex items-center justify-center border border-green-500/30"><Check size={8} /></div>
+                <span>Conexión <span className="font-bold text-white">Tech</span></span>
+              </div>
+              <span className="text-[10px] text-green-500 font-bold">Hecho</span>
+            </div>
+            <div className="flex items-center justify-between text-xs group cursor-pointer">
+              <div className="flex items-center gap-3 text-slate-300 group-hover:text-white transition-colors">
+                <div className="w-4 h-4 rounded-full bg-slate-800 border border-slate-600"></div>
+                <span>Reunión <span className="font-bold text-white">Inversor</span></span>
+              </div>
+              <span className="text-[10px] text-slate-500">Pendiente</span>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const ActiveEventsModal = ({ onClose, events }) => {
+      return (
+        <div className="fixed inset-0 z-[160] bg-slate-950 flex flex-col animate-fadeIn">
+          <div className="flex items-center justify-between px-4 py-4 border-b border-white/10 bg-slate-900 sticky top-0 z-10">
+            <div className="flex items-center gap-3">
+              <button onClick={onClose} className="px-3 py-2 -ml-2 rounded-full text-slate-300 hover:text-white hover:bg-slate-800 transition-colors flex items-center gap-1 group">
+                <ChevronLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
+                <span className="text-sm font-medium">Volver</span>
+              </button>
+              <h2 className="text-lg font-bold text-white tracking-wide">Eventos Activos</h2>
+            </div>
+            <button onClick={onClose} className="p-2 rounded-full bg-slate-800/50 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"><X size={20} /></button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {events.map(evt => (
+              <div key={evt.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col gap-2 relative overflow-hidden group hover:border-amber-500/30 transition-all">
+                <div className="flex justify-between items-start">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400 bg-blue-900/10 px-2 py-1 rounded border border-blue-500/20">{evt.type}</span>
+                  <div className="flex items-center gap-1 text-slate-400 text-xs">
+                    <Users size={12} /> {evt.attendees}
+                  </div>
+                </div>
+                <h3 className="text-white font-bold text-lg leading-tight mt-1">{evt.title}</h3>
+                <div className="flex items-center gap-4 text-xs text-slate-400 mt-2">
+                  <span className="flex items-center gap-1"><Clock size={12} className="text-amber-500" /> {evt.time}</span>
+                  <span className="flex items-center gap-1"><MapPin size={12} className="text-amber-500" /> {evt.location}</span>
+                </div>
+                <button className="w-full mt-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold border border-white/5 transition-all">Inscribirse</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
     function App() {
+      // --- FEATURE FLAGS (HOME UPGRADE) ---
+      const FF_HOME_HERO = true;
+      const FF_HOME_ACTIONS = true;
+      const FF_HOME_PIPELINE = true;
+      const FF_HOME_AI_MICROCTA = true;
+      const [showActiveEvents, setShowActiveEvents] = useState(false);
       // Estado de Navegación
       const [activeTab, setActiveTab] = useState(SECTIONS.HOME.id);
       // Estado de Idioma
@@ -1684,6 +1837,8 @@
                   <button onClick={() => setShowNotifications(true)} className="relative w-12 h-12 rounded-2xl bg-slate-800 border border-white/10 flex items-center justify-center text-white hover:bg-slate-700 hover:border-white/30 transition-all shadow-lg"><Bell size={24} /><span className="absolute top-2.5 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-slate-900 animate-pulse"></span></button>
                 </div>
               </div>
+              {/* SMART HERO */}
+              {FF_HOME_HERO && <SmartHero userData={userData} t={t} onEventsClick={() => setShowActiveEvents(true)} />}
               <div className="w-full bg-slate-900 rounded-2xl border border-yellow-500/30 relative overflow-hidden mb-10 shadow-2xl group transition-transform hover:scale-[1.01]">
                 <img src="https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg" className="absolute -left-6 top-1/2 -translate-y-1/2 h-40 w-40 opacity-10 grayscale group-hover:grayscale-0 transition-all duration-700 pointer-events-none" alt="FCB" />
                 <img src="https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg" className="absolute -right-6 top-1/2 -translate-y-1/2 h-40 w-40 opacity-10 grayscale group-hover:grayscale-0 transition-all duration-700 pointer-events-none" alt="RMA" />
@@ -1738,6 +1893,8 @@
                   )}
                 </div>
               </div>
+              {/* QUICK ACTIONS */}
+              {FF_HOME_ACTIONS && <QuickActions />}
               <div className="w-full mb-8 animate-fadeIn delay-100">
                 <h3 className="flex items-center gap-2 text-white font-bold text-lg mb-4"><Sparkles size={20} className="text-cyan-400 animate-pulse" />{t.suggestions.title}</h3>
                 <div className="flex flex-col gap-3">
@@ -1753,7 +1910,10 @@
                         </div>
                         <div className="mt-1.5 flex items-center gap-1.5 opacity-80"><Sparkles size={10} className="text-cyan-500" /><span className="text-[10px] text-slate-300 leading-tight"><span className="text-slate-500">{t.suggestions.reason} </span> {profile.reason}</span></div>
                       </div>
-                      <button onClick={() => handleStartChat(profile)} className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-300 text-xs font-medium hover:bg-white hover:text-black hover:border-white transition-colors">{t.suggestions.connect}</button>
+                      <div className="flex flex-col gap-2">
+                        <button onClick={() => handleStartChat(profile)} className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-300 text-xs font-medium hover:bg-white hover:text-black hover:border-white transition-colors">{t.suggestions.connect}</button>
+                        {FF_HOME_AI_MICROCTA && <button className="text-[10px] text-amber-500 hover:text-amber-400 font-medium text-center">Explorar Sinergia</button>}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1773,6 +1933,8 @@
                   ))}
                 </div>
               </div>
+              {/* NETWORKING PIPELINE */}
+              {FF_HOME_PIPELINE && <NetworkingPipeline />}
 
               {showNotifications && (
                 <div className="fixed inset-0 z-[60] flex items-start justify-center pt-24 px-4 bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={() => setShowNotifications(false)}>
@@ -1783,9 +1945,21 @@
                   </div>
                 </div>
               )}
+              {showActiveEvents && (
+                <ActiveEventsModal onClose={() => setShowActiveEvents(false)} events={ACTIVE_EVENTS} />
+              )}
               {showAttendees && (
-                <div className="fixed inset-0 z-[80] bg-slate-950 flex flex-col animate-fadeIn">
-                  <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-slate-900 sticky top-0 z-10"><h2 className="text-lg font-bold text-white tracking-wide">{t.modals.attendees_title}</h2><button onClick={() => setShowAttendees(false)} className="p-2 rounded-full bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"><X size={20} /></button></div>
+                <div className="fixed inset-0 z-[150] bg-slate-950 flex flex-col animate-fadeIn">
+                  <div className="flex items-center justify-between px-4 py-4 border-b border-white/10 bg-slate-900 sticky top-0 z-10">
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setShowAttendees(false)} className="px-3 py-2 -ml-2 rounded-full text-slate-300 hover:text-white hover:bg-slate-800 transition-colors flex items-center gap-1 group">
+                        <ChevronLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
+                        <span className="text-sm font-medium">Volver</span>
+                      </button>
+                      <h2 className="text-lg font-bold text-white tracking-wide">{t.modals.attendees_title}</h2>
+                    </div>
+                    <button onClick={() => setShowAttendees(false)} className="p-2 rounded-full bg-slate-800/50 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"><X size={20} /></button>
+                  </div>
                   <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {[...ATTENDEES, ...ATTENDEES, ...ATTENDEES].map((person, index) => (
                       <div key={index} className="flex items-center justify-between p-3 rounded-xl bg-slate-900/50 border border-white/5 hover:border-amber-500/30 transition-all group">
