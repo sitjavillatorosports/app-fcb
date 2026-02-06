@@ -1,0 +1,2684 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APP FCB</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.2.0",
+      "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+      "lucide-react": "https://esm.sh/lucide-react@0.263.1"
+    }
+  }
+  </script>
+  <style>
+    /* Custom Scrollbar for "no-scrollbar" utility if needed, though Tailwind might not have it by default */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .animate-fadeIn {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-200">
+  <div id="root"></div>
+  <script type="text/babel" data-type="module">
+    import React, { useState, useMemo, useEffect, useRef } from 'react';
+    import ReactDOM from 'react-dom/client';
+    import {
+      Home,
+      Users,
+      CalendarCheck,
+      TrendingUp,
+      UserCog,
+      Gem,
+      ShoppingBag,
+      CreditCard,
+      X,
+      QrCode,
+      Save,
+      Mail,
+      Phone,
+      Briefcase,
+      Bell,
+      Bot,
+      Send,
+      CheckCircle,
+      MapPin,
+      Clock,
+      MessageCircle,
+      Utensils,
+      Trophy,
+      Wine,
+      Sparkles,
+      Calendar,
+      CalendarClock,
+      ChevronRight,
+      ChevronLeft,
+      MoreVertical,
+      ArrowLeft,
+      Check,
+      Crown,
+      Search,
+      Filter,
+      Mic,
+      ClipboardCheck,
+      Video,
+      MessageSquare,
+      Lock,
+      Unlock,
+      Zap,
+      Shield,
+      FileText,
+      Globe,
+      Camera,
+      Monitor,
+      Car,
+      Star,        // Añadido para indicar nivel premium
+      Heart,
+      Edit,
+      PieChart,
+      BarChart3,
+      BarChart,
+      FileText: LucideFileText,
+      Download,
+      TrendingDown,
+      Target,
+      ArrowUpRight,
+      ShieldCheck,
+      Award,
+      CheckSquare,
+      AlertCircle
+    } from 'lucide-react';
+
+    // --- SISTEMA DE TRADUCCIONES ---
+    const translations = {
+      ESP: {
+        nav: { home: 'Inicio', directory: 'Directorio', bookings: 'Reservas', investment: 'Inversión', manager: 'Manager', services: 'Servicios', store: 'Tienda' },
+        header: { role: 'Presidente', company: 'FC Barcelona', menu: 'MENÚ', language: 'Idioma' },
+        welcome: { hello: 'Hola', member: 'Business Premium Member' },
+        match: {
+          title: 'EL CLÁSICO',
+          date: 'Domingo 28 Oct • 21:00h',
+          pre: { time: '19:30', phase: 'PRE', act: 'Catering Sala Roma' },
+          dur: { time: '21:00', phase: 'PARTIDO', act: 'Palco VIP 104' },
+          post: { time: '23:00', phase: 'POST', act: 'Lounge Networking' },
+          attendees: 'Miembros asistirán. Ver lista.',
+          btn_confirm: 'Confirmar Asistencia',
+          btn_cancel: 'Cancelar asistencia',
+          msg_confirmed: '¡Asistencia Confirmada! Entrada en Wallet'
+        },
+        suggestions: { title: 'Conexiones Sugeridas (IA)', affinity: 'Afinidad', reason: 'Motivo:', connect: 'Conectar' },
+        shortcuts: { dir_title: 'Directorio', dir_sub: 'Buscar Socios', res_title: 'Reservas', res_sub: 'Salas y Eventos' },
+        agenda: { title: 'Mi Agenda Semanal', details: 'Detalles del Evento', location: 'Ubicación:', desc: 'Descripción:' },
+        modals: {
+          edit_profile: 'Editar Perfil',
+          attendees_title: 'Asistentes al Clásico',
+          btn_contact: 'Contactar',
+          card_title: 'FC BARCELONA BUSINESS MEMBER',
+          close: 'Cerrar'
+        },
+        buy: 'Comprar',
+        manager: {
+          title: 'Mi Gestor Personal',
+          subtitle: 'Atención exclusiva para socios Business.',
+          human: {
+            title: 'Tu Gestor Asignado',
+            role: 'Senior Account Manager',
+            availability: 'Lun - Vie • 09:00 - 18:00',
+            status_online: 'Disponible ahora',
+            status_offline: 'Fuera de horario',
+            btn_call: 'Llamar',
+            btn_video: 'Mensaje',
+            btn_schedule: 'Agendar Cita',
+            desc: 'Contacta con Jordi para gestiones complejas, incidencias o peticiones especiales.'
+          },
+          bot: {
+            title: 'Barça Business AI',
+            role: 'Asistente Virtual 24/7',
+            status: 'Siempre Disponible',
+            desc: 'Resolución inmediata de dudas, reservas rápidas y consultas de saldo.',
+            btn_chat: 'Iniciar Chat IA'
+          }
+        },
+        services_view: {
+          title: 'Servicios Digitales',
+          subtitle: 'Catálogo exclusivo para Business Members',
+          included: 'INCLUIDO',
+          acquired: 'ADQUIRIDO',
+          premium: 'PREMIUM',
+          access: 'Acceder',
+          price: 'Precio',
+          buy: 'Comprar',
+          insufficient: 'Saldo Insuficiente'
+        },
+        bookings: {
+          title: 'Reservas',
+          subtitle: 'Gestiona tus espacios y eventos exclusivos.',
+          rooms: 'Salas',
+          events: 'Eventos',
+          available_slots: 'Horarios Disponibles',
+          cancel: 'Cancelar',
+          occupied: 'Ocupado',
+          book: 'Reservar',
+          access_for: 'Acceder por',
+          upgrade: 'Mejorar Nivel',
+          no_availability: 'No hay disponibilidad para este día.',
+          select_day: 'Selecciona un día en el calendario para ver disponibilidad.',
+          months: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+          weekDays: ['L', 'M', 'X', 'J', 'V', 'S', 'D']
+        },
+        directory: {
+          search_placeholder: 'Buscar socio, empresa o cargo...',
+          found_partners: 'Socios Encontrados',
+          pending: 'Pendiente',
+          connect: 'Conectar',
+          recommended_match: 'Tu Match Recomendado',
+          start_contact: 'Iniciar Contacto',
+          weekly_activities: 'Actividades Semanales',
+          networking_leaders: 'Líderes del Networking',
+          business_opps: 'Oportunidades de Negocio',
+          interested: 'Me interesa',
+          modal: {
+            networking: 'Networking',
+            location: 'Ubicación',
+            description: 'Descripción',
+            attendance: 'Asistencia',
+            confirmed_attendees: 'Asistentes confirmados',
+            confirm_attendance: 'Confirmar Asistencia',
+            pay_access: 'Pagar Acceso',
+            upgrade_access: 'Mejorar mi nivel para acceder gratis',
+            attendance_confirmed: 'Asistencia Confirmada'
+          },
+          sectors: { 'Todos': 'Todos', 'Tecnología': 'Tecnología', 'Inversión': 'Inversión', 'Real Estate': 'Real Estate', 'Deporte': 'Deporte', 'Salud': 'Salud', 'Legal': 'Legal' },
+          opp_types: { 'DEMANDA': 'DEMANDA', 'OFERTA': 'OFERTA', 'INVERSIÓN': 'INVERSIÓN' },
+          no_results: 'No se encontraron socios con estos filtros.'
+        },
+        home: {
+          attendees_box: {
+            title: 'Quien asiste al Palco',
+            members_confirmed: 'Miembros confirmados'
+          }
+        },
+        investment: {
+          title: 'Mi Inversión',
+          subtitle: 'Rendimiento de tu membresía Business Premium',
+          roi_accumulated: 'ROI Acumulado',
+          growing: 'Creciendo',
+          generated_value: 'Valor generado',
+          start_t: 'Inicio T.',
+          now: 'Actualidad',
+          value_metrics: 'Métricas de Valor',
+          report_title: 'Informe Anual de Retorno',
+          report_meta: 'PDF • 2.4 MB • Generado hoy',
+          update_notice: 'Los datos se actualizan mensualmente en base al uso de activos y networking.',
+          kpis: {
+            networking: 'Valor Networking',
+            savings: 'Ahorro en Entradas',
+            events: 'Acceso Eventos',
+            brand: 'Impacto Marca'
+          }
+        },
+        shop: {
+          title: 'Barça Store',
+          subtitle: 'Marketplace exclusivo & Loyalty',
+          tab_coins: 'Barça Coins',
+          tab_products: 'Productos',
+          balance_title: 'Tu Saldo Actual',
+          balance_subtitle: 'Utiliza tus coins para acceder a experiencias únicas.',
+          reload_title: 'Recargar Saldo',
+          earn_title: 'Gana Coins Activamente',
+          tags: { starter: 'Starter', popular: 'Popular', best_value: 'Best Value' }
+        },
+        messages: {
+          title: 'Centro de Mensajes',
+          support_management: 'Soporte & Gestión',
+          client_messages: 'Mensajes de Clientes',
+          new: 'Nuevos',
+          no_pending: 'No tienes mensajes pendientes',
+          manager_available: 'Disponible ahora',
+          manager_offline: 'Fuera de horario',
+          placeholder_ai: 'Escribe a la IA...',
+          placeholder_chat: 'Escribe un mensaje...'
+        },
+        wallet: {
+          member_number: 'Número de Socio',
+          business_member: 'Business Member'
+        },
+        membership: {
+          title: 'Niveles de Membresía',
+          current_plan: 'Tu Plan Actual',
+          active_plan: 'Plan Activo',
+          upgrade: 'Mejorar Plan'
+        }
+      },
+      CAT: {
+        nav: { home: 'Inici', directory: 'Directori', bookings: 'Reserves', investment: 'Inversió', manager: 'Manager', services: 'Serveis', store: 'Botiga' },
+        header: { role: 'President', company: 'FC Barcelona', menu: 'MENÚ', language: 'Idioma' },
+        welcome: { hello: 'Hola', member: 'Membre Business Premium' },
+        match: {
+          title: 'EL CLÀSSIC',
+          date: 'Diumenge 28 Oct • 21:00h',
+          pre: { time: '19:30', phase: 'PRE', act: 'Càtering Sala Roma' },
+          dur: { time: '21:00', phase: 'PARTIT', act: 'Llotja VIP 104' },
+          post: { time: '23:00', phase: 'POST', act: 'Lounge Networking' },
+          attendees: 'Membres assistiran. Veure llista.',
+          btn_confirm: 'Confirmar Assistència',
+          btn_cancel: 'Cancel·lar assistència',
+          msg_confirmed: 'Assistència Confirmada! Entrada al Wallet'
+        },
+        suggestions: { title: 'Connexions Suggerides (IA)', affinity: 'Afinitat', reason: 'Motiu:', connect: 'Connectar' },
+        shortcuts: { dir_title: 'Directori', dir_sub: 'Cercar Socis', res_title: 'Reserves', res_sub: 'Sales i Esdeveniments' },
+        agenda: { title: 'La Meva Agenda Setmanal', details: "Detalls de l'Esdeveniment", location: 'Ubicació:', desc: 'Descripció:' },
+        modals: {
+          edit_profile: 'Editar Perfil',
+          attendees_title: 'Assistents al Clàssic',
+          btn_contact: 'Contactar',
+          card_title: 'SOCI BUSINESS FC BARCELONA',
+          close: 'Tancar'
+        },
+        buy: 'Comprar',
+        manager: {
+          title: 'El Meu Gestor Personal',
+          subtitle: 'Atenció exclusiva per a socis Business.',
+          human: {
+            title: 'El Teu Gestor Assignat',
+            role: 'Senior Account Manager',
+            availability: 'Dil - Div • 09:00 - 18:00',
+            status_online: 'Disponible ara',
+            status_offline: 'Fora d\'horari',
+            btn_call: 'Trucar',
+            btn_video: 'Missatge',
+            btn_schedule: 'Agendar Cita',
+            desc: 'Contacta amb el Jordi per gestions complexes, incidències o peticions especials.'
+          },
+          bot: {
+            title: 'Barça Business AI',
+            role: 'Assistent Virtual 24/7',
+            status: 'Sempre Disponible',
+            desc: 'Resolució immediata de dubtes, reserves ràpides i consultes de saldo.',
+            btn_chat: 'Iniciar Xat IA'
+          }
+        },
+        services_view: {
+          title: 'Serveis Digitals',
+          subtitle: 'Catàleg exclusiu per a membres Business',
+          included: 'INCLÒS',
+          acquired: 'ADQUIRIT',
+          premium: 'PRÈMIUM',
+          access: 'Accedir',
+          price: 'Preu',
+          buy: 'Comprar',
+          insufficient: 'Saldo Insuficient'
+        },
+        bookings: {
+          title: 'Reserves',
+          subtitle: 'Gestiona els teus espais i esdeveniments exclusius.',
+          rooms: 'Sales',
+          events: 'Esdeveniments',
+          available_slots: 'Horaris Disponibles',
+          cancel: 'Cancel·lar',
+          occupied: 'Ocupat',
+          book: 'Reservar',
+          access_for: 'Accedir per',
+          upgrade: 'Millorar Nivell',
+          no_availability: 'No hi ha disponibilitat per aquest dia.',
+          select_day: 'Selecciona un dia al calendari per veure disponibilitat.',
+          months: ['Gener', 'Febrer', 'Març', 'Abril', 'Maig', 'Juny', 'Juliol', 'Agost', 'Setembre', 'Octubre', 'Novembre', 'Desembre'],
+          weekDays: ['Dl', 'Dt', 'Dc', 'Dj', 'Dv', 'Ds', 'Dg']
+        },
+        directory: {
+          search_placeholder: 'Cercar soci, empresa o càrrec...',
+          found_partners: 'Socis Trobats',
+          pending: 'Pendent',
+          connect: 'Connectar',
+          recommended_match: 'El teu Match Recomanat',
+          start_contact: 'Iniciar Contacte',
+          weekly_activities: 'Activitats Setmanals',
+          networking_leaders: 'Líders del Networking',
+          business_opps: 'Oportunitats de Negoci',
+          interested: "M'interessa",
+          modal: {
+            networking: 'Networking',
+            location: 'Ubicació',
+            description: 'Descripció',
+            attendance: 'Assistència',
+            confirmed_attendees: 'Assistents confirmats',
+            confirm_attendance: 'Confirmar Assistència',
+            pay_access: 'Pagar Accés',
+            upgrade_access: 'Millorar el meu nivell per accedir gratis',
+            attendance_confirmed: 'Assistència Confirmada'
+          },
+          sectors: { 'Todos': 'Tots', 'Tecnología': 'Tecnologia', 'Inversión': 'Inversió', 'Real Estate': 'Real Estate', 'Deporte': 'Esport', 'Salud': 'Salut', 'Legal': 'Legal' },
+          opp_types: { 'DEMANDA': 'DEMANDA', 'OFERTA': 'OFERTA', 'INVERSIÓN': 'INVERSIÓ' },
+          no_results: 'No s\'han trobat socis amb aquests filtres.'
+        },
+        home: {
+          attendees_box: {
+            title: 'Qui assisteix a la Llotja',
+            members_confirmed: 'Membres confirmats'
+          }
+        },
+        investment: {
+          title: 'La Meva Inversió',
+          subtitle: 'Rendiment de la teva membresia Business Premium',
+          roi_accumulated: 'ROI Acumulat',
+          growing: 'Creixent',
+          generated_value: 'Valor generat',
+          start_t: 'Inici T.',
+          now: 'Actualitat',
+          value_metrics: 'Mètriques de Valor',
+          report_title: 'Informe Anual de Retorn',
+          report_meta: 'PDF • 2.4 MB • Generat avui',
+          update_notice: "Les dades s'actualitzen mensualment en base a l'ús d'actius i networking.",
+          kpis: {
+            networking: 'Valor Networking',
+            savings: 'Estalvi en Entrades',
+            events: 'Accés Esdeveniments',
+            brand: 'Impacte de Marca'
+          }
+        },
+        shop: {
+          title: 'Barça Store',
+          subtitle: 'Marketplace exclusiu & Loyalty',
+          tab_coins: 'Barça Coins',
+          tab_products: 'Productes',
+          balance_title: 'El teu Saldo Actual',
+          balance_subtitle: 'Utilitza les teves coins per accedir a experiències úniques.',
+          reload_title: 'Recarregar Saldo',
+          earn_title: 'Guanya Coins Activament',
+          tags: { starter: 'Starter', popular: 'Popular', best_value: 'Millor Valor' }
+        },
+        messages: {
+          title: 'Centre de Missatges',
+          support_management: 'Suport i Gestió',
+          client_messages: 'Missatges de Clients',
+          new: 'Nous',
+          no_pending: 'No tens missatges pendents',
+          manager_available: 'Disponible ara',
+          manager_offline: "Fora d'horari",
+          placeholder_ai: 'Escriu a la IA...',
+          placeholder_chat: 'Escriu un missatge...'
+        },
+        wallet: {
+          member_number: 'Número de Soci',
+          business_member: 'Soci Business'
+        },
+        membership: {
+          title: 'Nivells de Membresia',
+          current_plan: 'El teu Pla Actual',
+          active_plan: 'Pla Actiu',
+          upgrade: 'Millorar Pla'
+        }
+      },
+      ENG: {
+        nav: { home: 'Home', directory: 'Directory', bookings: 'Bookings', investment: 'Investment', manager: 'Manager', services: 'Services', store: 'Store' },
+        header: { role: 'President', company: 'FC Barcelona', menu: 'MENU', language: 'Language' },
+        welcome: { hello: 'Hello', member: 'Business Premium Member' },
+        match: {
+          title: 'EL CLÁSICO',
+          date: 'Sunday Oct 28 • 21:00h',
+          pre: { time: '19:30', phase: 'PRE', act: 'Sala Roma Catering' },
+          dur: { time: '21:00', phase: 'MATCH', act: 'VIP Box 104' },
+          post: { time: '23:00', phase: 'POST', act: 'Networking Lounge' },
+          attendees: 'Members attending. See list.',
+          btn_confirm: 'Confirm Attendance',
+          btn_cancel: 'Cancel attendance',
+          msg_confirmed: 'Attendance Confirmed! Ticket in Wallet'
+        },
+        suggestions: { title: 'AI Smart Connections', affinity: 'Match', reason: 'Why:', connect: 'Connect' },
+        shortcuts: { dir_title: 'Directory', dir_sub: 'Find Members', res_title: 'Bookings', res_sub: 'Rooms & Events' },
+        agenda: { title: 'My Weekly Schedule', details: 'Event Details', location: 'Location:', desc: 'Description:' },
+        modals: {
+          edit_profile: 'Edit Profile',
+          attendees_title: 'El Clásico Attendees',
+          btn_contact: 'Connect',
+          card_title: 'FC BARCELONA BUSINESS MEMBER',
+          close: 'Close'
+        },
+        buy: 'Buy Now',
+        manager: {
+          title: 'My Personal Manager',
+          subtitle: 'Exclusive support for Business members.',
+          human: {
+            title: 'Your Assigned Manager',
+            role: 'Senior Account Manager',
+            availability: 'Mon - Fri • 09:00 - 18:00',
+            status_online: 'Available now',
+            status_offline: 'Offline',
+            btn_call: 'Call Now',
+            btn_video: 'Message',
+            btn_schedule: 'Schedule Meeting',
+            desc: 'Contact Jordi for complex requests, issues, or special arrangements.'
+          },
+          bot: {
+            title: 'Barça Business AI',
+            role: '24/7 Virtual Assistant',
+            status: 'Always Available',
+            desc: 'Immediate resolution for FAQs, quick bookings, and balance checks.',
+            btn_chat: 'Start AI Chat'
+          }
+        },
+        services_view: {
+          title: 'Digital Services',
+          subtitle: 'Exclusive catalog for Business Members',
+          included: 'INCLUDED',
+          acquired: 'ACQUIRED',
+          premium: 'PREMIUM',
+          access: 'Access',
+          price: 'Price',
+          buy: 'Buy',
+          insufficient: 'Insufficient Balance'
+        },
+        bookings: {
+          title: 'Bookings',
+          subtitle: 'Manage your exclusive spaces and events.',
+          rooms: 'Rooms',
+          events: 'Events',
+          available_slots: 'Available Slots',
+          cancel: 'Cancel',
+          occupied: 'Occupied',
+          book: 'Book',
+          access_for: 'Access for',
+          upgrade: 'Upgrade Level',
+          no_availability: 'No availability for this day.',
+          select_day: 'Select a day on the calendar to see availability.',
+          months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+          weekDays: ['M', 'T', 'W', 'Th', 'F', 'S', 'S']
+        },
+        directory: {
+          search_placeholder: 'Search member, company or role...',
+          found_partners: 'Found Partners',
+          pending: 'Pending',
+          connect: 'Connect',
+          recommended_match: 'Your Recommended Match',
+          start_contact: 'Start Contact',
+          weekly_activities: 'Weekly Activities',
+          networking_leaders: 'Networking Leaders',
+          business_opps: 'Business Opportunities',
+          interested: "I'm interested",
+          modal: {
+            networking: 'Networking',
+            location: 'Location',
+            description: 'Description',
+            attendance: 'Attendance',
+            confirmed_attendees: 'Confirmed attendees',
+            confirm_attendance: 'Confirm Attendance',
+            pay_access: 'Pay Access',
+            upgrade_access: 'Upgrade my level to access for free',
+            attendance_confirmed: 'Attendance Confirmed'
+          },
+          sectors: { 'Todos': 'All', 'Tecnología': 'Technology', 'Inversión': 'Investment', 'Real Estate': 'Real Estate', 'Deporte': 'Sport', 'Salud': 'Health', 'Legal': 'Legal' },
+          opp_types: { 'DEMANDA': 'DEMAND', 'OFERTA': 'OFFER', 'INVERSIÓN': 'INVESTMENT' },
+          no_results: 'No partners found with these filters.'
+        },
+        home: {
+          attendees_box: {
+            title: 'Who is attending the Box',
+            members_confirmed: 'Members confirmed'
+          }
+        },
+        investment: {
+          title: 'My Investment',
+          subtitle: 'Performance of your Business Premium membership',
+          roi_accumulated: 'ROI Accumulated',
+          growing: 'Growing',
+          generated_value: 'Generated Value',
+          start_t: 'Start Q.',
+          now: 'Current',
+          value_metrics: 'Value Metrics',
+          report_title: 'Annual Return Report',
+          report_meta: 'PDF • 2.4 MB • Generated today',
+          update_notice: 'Data updates monthly based on asset usage and networking.',
+          kpis: {
+            networking: 'Networking Value',
+            savings: 'Ticket Savings',
+            events: 'Event Access',
+            brand: 'Brand Impact'
+          }
+        },
+        shop: {
+          title: 'Barça Store',
+          subtitle: 'Exclusive Marketplace & Loyalty',
+          tab_coins: 'Barça Coins',
+          tab_products: 'Products',
+          balance_title: 'Your Current Balance',
+          balance_subtitle: 'Use your coins to access unique experiences.',
+          reload_title: 'Reload Balance',
+          earn_title: 'Earn Coins Actively',
+          tags: { starter: 'Starter', popular: 'Popular', best_value: 'Best Value' }
+        },
+        messages: {
+          title: 'Message Center',
+          support_management: 'Support & Management',
+          client_messages: 'Client Messages',
+          new: 'New',
+          no_pending: 'No pending messages',
+          manager_available: 'Available now',
+          manager_offline: 'Offline',
+          placeholder_ai: 'Type to AI...',
+          placeholder_chat: 'Type a message...'
+        },
+        wallet: {
+          member_number: 'Member ID',
+          business_member: 'Business Member'
+        },
+        membership: {
+          title: 'Membership Levels',
+          current_plan: 'Your Current Plan',
+          active_plan: 'Active Plan',
+          upgrade: 'Upgrade Plan'
+        }
+      }
+    };
+
+    // --- CONFIGURACIÓN DE SECCIONES ---
+    const SECTIONS = {
+      HOME: { id: 'home', icon: Home },
+      DIRECTORY: { id: 'directory', icon: Users },
+      BOOKINGS: { id: 'bookings', icon: CalendarCheck },
+      INVESTMENT: { id: 'investment', icon: TrendingUp },
+      MANAGER: { id: 'manager', icon: UserCog },
+      SERVICES: { id: 'services', icon: Gem },
+      SHOP: { id: 'shop', icon: ShoppingBag }
+    };
+
+    // --- CATALOGO DE SERVICIOS ---
+    // Actualizado con servicios corporativos (B2B)
+    const SERVICES_CATALOG = [
+      { id: 'srv-b2b-1', name: 'Catering Ejecutivo', desc: 'Servicio gourmet en palco con ibéricos y sushi.', level: 4, price: 2000, icon: Utensils, category: 'Hospitality', img: 'https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=400&q=80' },
+      { id: 'srv-b2b-2', name: 'Intérpretes Nativos', desc: 'Acompañamiento en varios idiomas para negocios.', level: 4, price: 1200, icon: Globe, category: 'Business', img: 'https://images.unsplash.com/photo-1577563908411-5077b6dc7624?auto=format&fit=crop&w=400&q=80' },
+      { id: 'srv-b2b-3', name: 'Branding Digital', desc: 'Proyección de marca en pantallas del palco.', level: 5, price: 5000, icon: Monitor, category: 'Marketing', img: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=400&q=80' },
+      { id: 'srv-b2b-4', name: 'Sala de Juntas', desc: 'Alquiler de sala privada previa al partido.', level: 3, price: 2500, icon: Briefcase, category: 'Meeting', img: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=400&q=80' },
+      { id: 'srv-b2b-5', name: 'Transfer Grupo VIP', desc: 'Recogida en flota de vehículos de lujo.', level: 4, price: 1500, icon: Car, category: 'Logistics', img: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=400&q=80' },
+      { id: 'srv-b2b-6', name: 'Fotógrafo Corporativo', desc: 'Reportaje profesional del evento.', level: 3, price: 800, icon: Camera, category: 'Media', img: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=400&q=80' }
+    ];
+
+    // --- CALENDARIO DE PARTIDOS (Highlight en Reservas) ---
+    const MATCH_SCHEDULE = [15, 22, 29]; // Dias con partido
+
+    // --- URLs DE BANDERAS ---
+    const FLAG_URLS = {
+      CAT: "https://upload.wikimedia.org/wikipedia/commons/c/ce/Flag_of_Catalonia.svg",
+      ESP: "https://upload.wikimedia.org/wikipedia/commons/9/9a/Flag_of_Spain.svg",
+      ENG: "https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg"
+    };
+
+    // --- DATOS MOCK ---
+    const ATTENDEES = [
+      { name: 'Alexia Putellas', role: 'Honorary Member', company: 'FC Barcelona', image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=100&q=80' },
+      { name: 'Gerard Piqué', role: 'CEO', company: 'Kosmos', image: 'https://images.unsplash.com/photo-1500648767791-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80' },
+      { name: 'Ana Botín', role: 'Presidenta', company: 'Banco Santander', image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=100&q=80' },
+      { name: 'Tim Cook', role: 'CEO', company: 'Apple', image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=100&q=80' },
+    ];
+
+    const suggestedProfiles = [
+      { id: 1, name: 'Ferran Reverter', role: 'CEO', company: 'MediaMarkt Saturn', level: 'Platinum Member', affinity: 98, reason: 'Interés compartido en Retail Tech', img: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=100&q=80' },
+      { id: 2, name: 'Sol Daurella', role: 'Presidenta', company: 'Coca-Cola EP', level: 'Gold Member', affinity: 85, reason: 'Sector Inversión & Gran Consumo', img: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=100&q=80' },
+      { id: 3, name: 'Marc Benioff', role: 'CEO', company: 'Salesforce', level: 'Global Partner', affinity: 92, reason: 'Oportunidad de sinergia Cloud', img: 'https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=100&q=80' }
+    ];
+
+    const weeklyEvents = [
+      { id: 1, day: 'MAR', date: '29', time: '14:00h', title: 'Comida Directiva Tech', location: 'Restaurante Via Veneto', type: 'Business', desc: 'Reunión mensual para discutir estrategias de transformación digital en el club.' },
+      { id: 2, day: 'JUE', date: '31', time: '18:30h', title: 'Torneo Padel Business', location: 'Ciutat Esportiva', type: 'Sport', desc: 'Torneo benéfico por parejas. Pareja asignada: Carles Puyol.' },
+      { id: 3, day: 'VIE', date: '01', time: '09:00h', title: 'Breakfast Innovation Hub', location: 'Auditori 1899', type: 'Learning', desc: 'Presentación de nuevas startups del sector SportTech.' }
+    ];
+
+    const membershipLevels = [
+      { id: 1, name: 'Digital Fan', price: 'Gratis', color: 'border-slate-600', features: ['Acceso App Básico', 'Noticias del Club', 'Descuento 5% Tienda'] },
+      { id: 2, name: 'Socio Business', price: '50€ / mes', color: 'border-blue-500', features: ['Acceso Directorio', '1 Evento Mensual', 'Networking Básico'] },
+      { id: 3, name: 'Business Premium', price: '150€ / mes', current: true, color: 'border-yellow-500', features: ['Acceso Salas VIP', 'Prioridad en Entradas', 'Asistente IA', 'Eventos Exclusivos'] },
+      { id: 4, name: 'Palco VIP Gold', price: '450€ / mes', color: 'border-orange-500', features: ['Palco en Partidos', 'Catering Premium', 'Viajes con el Equipo', 'Gestor Personal'] },
+      { id: 5, name: 'Corporate Partner', price: 'Consultar', color: 'border-purple-500', features: ['Visibilidad de Marca', 'Eventos Privados en Camp Nou', 'Acceso Directiva', 'Todo Incluido'] }
+    ];
+
+    const rankingData = [
+      { id: 1, name: 'Joan Laporta', points: '12.500 pts', company: 'FC Barcelona', img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=100&q=80', rank: 1 },
+      { id: 2, name: 'Ana Botín', points: '10.200 pts', company: 'Santander', img: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=100&q=80', rank: 2 },
+      { id: 3, name: 'Florentino Pérez', points: '9.800 pts', company: 'ACS', img: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=100&q=80', rank: 3 }
+    ];
+
+    // Actualizado con niveles y costes
+    const networkEvents = [
+      { id: 1, title: 'Speed Networking', day: 'MIÉ', date: '30 Oct', time: '18:00', loc: 'Sala París', desc: 'Rondas rápidas de 5 minutos para conocer a 20 socios nuevos.', attendees: 45, level: 2, cost: 0, reward: 50 },
+      { id: 2, title: 'Cena de Gala', day: 'VIE', date: '01 Nov', time: '21:00', loc: 'Camp Nou Lounge', desc: 'Cena exclusiva con miembros de la directiva.', attendees: 120, level: 5, cost: 1000, reward: 150 },
+      { id: 3, title: 'Torneo Golf Business', day: 'SÁB', date: '02 Nov', time: '09:00', loc: 'Golf Sant Cugat', desc: 'Jornada deportiva y cierre de acuerdos en el Green.', attendees: 30, level: 3, cost: 200, reward: 100 }
+    ];
+
+    const SECTORS = ['Todos', 'Tecnología', 'Inversión', 'Real Estate', 'Deporte', 'Salud', 'Legal'];
+    const MEMBERS = [
+      { id: 101, name: 'Elena García', role: 'CTO', company: 'TechSolutions', sector: 'Tecnología', img: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=100&q=80' },
+      { id: 102, name: 'Carlos Slim', role: 'Inversor', company: 'Grupo Carso', sector: 'Inversión', img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80' },
+      { id: 103, name: 'Marta Ortega', role: 'Presidenta', company: 'Inditex', sector: 'Real Estate', img: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=100&q=80' },
+      { id: 104, name: 'Pau Gasol', role: 'Presidente', company: 'Gasol Foundation', sector: 'Deporte', img: 'https://images.unsplash.com/photo-1500648767791-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80' },
+      { id: 105, name: 'Dr. Valentí Fuster', role: 'Director', company: 'CNIC', sector: 'Salud', img: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=100&q=80' },
+      { id: 106, name: 'Sonia Gumpert', role: 'Socia', company: 'Monereo Meyer', sector: 'Legal', img: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=100&q=80' }
+    ];
+
+    const businessOpps = [
+      { id: 1, type: 'DEMANDA', title: 'Busco Partner Logístico', desc: 'Necesitamos operador para envíos a Asia.', company: 'Textil BCN', author: 'Marta Vilar', time: 'Hace 2h' },
+      { id: 2, type: 'OFERTA', title: 'Auditoría SEO Gratuita', desc: 'Ofrezco auditoría inicial para ecommerce de socios.', company: 'Digital Growth', author: 'Pau Gasol Ent.', time: 'Hace 5h' },
+      { id: 3, type: 'INVERSIÓN', title: 'Ronda Seed Fintech', desc: 'Ticket mínimo 50k. Startup validada por Barça Innovation Hub.', company: 'PayBall App', author: 'Jordi Cruyff', time: 'Ayer' }
+    ];
+
+    const recommendedMatch = {
+      id: 999,
+      name: 'José Elías',
+      role: 'Inversor Principal',
+      company: 'Audax Renovables',
+      sector: 'Energía',
+      affinity: 97,
+      reason: 'Gran afinidad en el sector Energías Renovables',
+      img: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80'
+    };
+
+    // --- DEFINICIÓN PERFIL MANAGER ---
+    const MANAGER_PROFILE = {
+      id: 'manager-001',
+      name: 'Jordi Cruyff',
+      role: 'Senior Account Manager',
+      company: 'FC Barcelona',
+      image: 'https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=150&q=80',
+      status: 'online',
+      reason: 'Asistencia Personal Premium'
+    };
+
+    // --- BASE DE CONOCIMIENTO DE LA IA ---
+    const AI_KNOWLEDGE_BASE = {
+      location: [
+        "Los palcos VIP se encuentran en la Tribuna Principal, acceso 14.",
+        "Para palcos 104, utiliza los ascensores de la puerta 9.",
+        "Tu asiento está claramente marcado en tu entrada digital.",
+        "El acceso a tribuna es por el lateral oeste del estadio."
+      ],
+      logistics: [
+        "Las puertas abren 90 minutos antes del inicio del partido.",
+        "Recomendamos llegar 45 minutos antes para disfrutar del catering.",
+        "Evita aglomeraciones entrando antes de las 20:15h.",
+        "El acceso se cierra 15 minutos después del inicio del partido."
+      ],
+      parking: [
+        "El Parking VIP está en el acceso 14 del estadio.",
+        "Plazas disponibles en la zona 'Auditori 1899' para Business Members.",
+        "El parking público más cercano está en C/ Aristides Maillol.",
+        "Recuerda validar tu matrícula en la app para acceso automático."
+      ],
+      services: [
+        "La Sala Roma ofrece catering ininterrumpido desde las 19:30h.",
+        "Hay baños exclusivos en cada nivel de palcos VIP.",
+        "El punto de auxilio médico está en la puerta 50.",
+        "Servicio de camarero disponible en tu palco durante el partido."
+      ],
+      default: [
+        "Entendido, proceso tu consulta con el historial del manager.",
+        "Gracias por tu mensaje. Un agente revisará tu solicitud.",
+        "¿Puedo ayudarte con algo más sobre el evento de hoy?",
+        "Estoy aquí para facilitar tu experiencia en el Camp Nou."
+      ]
+    };
+
+    // --- PREGUNTAS RÁPIDAS (QUICK REPLIES) ---
+    const QUICK_REPLIES = [
+      "¿Dónde está mi palco?",
+      "¿A qué hora debo llegar?",
+      "¿Dónde aparco?",
+      "Servicios disponibles"
+    ];
+
+    // --- ESTADO INICIAL DEL CHAT (HÍBRIDO IA/MANAGER) ---
+    const INITIAL_SHARED_MESSAGES = [
+      { id: 'msg-init', sender: 'system', text: 'Hola Joan, soy el sistema híbrido de asistencia. Tanto la IA como Jordi Cruyff tienen acceso a este chat para darte el mejor servicio.', time: 'Hoy' }
+    ];
+
+    function App() {
+      // Estado de Navegación
+      const [activeTab, setActiveTab] = useState(SECTIONS.HOME.id);
+      // Estado de Idioma
+      const [language, setLanguage] = useState('ESP');
+      // Estado del Menú Desplegable
+      const [isMenuOpen, setIsMenuOpen] = useState(false);
+      // Estado del Carnet Digital
+      const [showCard, setShowCard] = useState(false);
+      // Estado de Membresías (UPGRADE)
+      const [showUpgrade, setShowUpgrade] = useState(false);
+      // Estado de Perfil Propio
+      const [showProfile, setShowProfile] = useState(false);
+      // Estado de Loyalty
+      const [barcaCoins, setBarcaCoins] = useState(10000); // Saldo inicial
+      const [shopTab, setShopTab] = useState('coins'); // 'products' o 'coins'
+
+      // --- NUEVO ESTADO: SERVICIOS DESBLOQUEADOS ---
+      const [unlockedServices, setUnlockedServices] = useState([]);
+
+      // --- ESTADOS DE VISTAS ---
+      const [showNotifications, setShowNotifications] = useState(false);
+      const [showAIAssistant, setShowAIAssistant] = useState(false);
+      const [showAttendees, setShowAttendees] = useState(false);
+      const [selectedEvent, setSelectedEvent] = useState(null);
+      const [isAttending, setIsAttending] = useState(false);
+
+      // --- ESTADOS PARA MENSAJERÍA UNIFICADA (NUEVA LÓGICA) ---
+      const [isMsgOpen, setIsMsgOpen] = useState(false);
+      const [activeChat, setActiveChat] = useState(null);
+      const [messageInput, setMessageInput] = useState('');
+      const [sharedMessages, setSharedMessages] = useState(INITIAL_SHARED_MESSAGES); // Estado compartido IA/Manager
+      const [isTyping, setIsTyping] = useState(false); // Estado para simular escritura IA
+
+      // --- ESTADOS PARA DIRECTORIO ---
+      const [selectedNetEvent, setSelectedNetEvent] = useState(null);
+      const [isJoined, setIsJoined] = useState(false);
+      const [searchTerm, setSearchTerm] = useState('');
+      const [activeSector, setActiveSector] = useState('Todos');
+      const [pendingConnections, setPendingConnections] = useState([]);
+
+      // --- ESTADOS PARA RESERVAS (CALENDARIO 2026) ---
+      const [bookingYear, setBookingYear] = useState(2026);
+      const [bookingMonth, setBookingMonth] = useState(0); // 0 = Enero, 11 = Diciembre
+      const [selectedBookingDate, setSelectedBookingDate] = useState(null); // Objeto Date seleccionado
+      const [bookingCategory, setBookingCategory] = useState('Salas'); // 'Salas' | 'Eventos'
+      const [confirmedSlots, setConfirmedSlots] = useState([]); // Array de IDs de slots reservados
+
+      // Datos de Usuario
+      const [userData, setUserData] = useState({
+        name: 'Joan Laporta',
+        position: 'Presidente',
+        company: 'FC Barcelona',
+        interests: ['Negocios Tecnológicos', 'Innovación Deportiva', 'Real Estate'],
+        email: 'j.laporta@fcbarcelona.cat',
+        phone: '+34 600 123 456',
+        bio: 'Socio desde 1974. Apasionado por el club y los negocios.',
+        memberId: '145.678',
+        membershipLevel: 3 // 3 = Business Premium (Digital Fan:0, Socio:1, Premium:2, Gold:3, Partner:4)
+      });
+
+      // HELPER PARA TRADUCCIONES
+      const t = translations[language] || translations['ESP'];
+
+      // --- LÓGICA DE CALENDARIO ---
+      const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+      const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+
+      const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+      const getFirstDayOfMonth = (year, month) => {
+        // 0 = Dom, 1 = Lun. Queremos 0 = Lun para renderizar L-D
+        const day = new Date(year, month, 1).getDay();
+        return day === 0 ? 6 : day - 1;
+      };
+
+      const handlePrevMonth = () => {
+        if (bookingMonth === 0) {
+          // Opcional: Permitir ir a 2025 si fuera necesario, por ahora bloqueamos en 2026
+          // setBookingMonth(11); setBookingYear(bookingYear - 1);
+        } else {
+          setBookingMonth(bookingMonth - 1);
+        }
+      };
+
+      const handleNextMonth = () => {
+        if (bookingMonth === 11) {
+          // Opcional: Ir a 2027
+          // setBookingMonth(0); setBookingYear(bookingYear + 1);
+        } else {
+          setBookingMonth(bookingMonth + 1);
+        }
+      };
+
+      const handleDateClick = (day) => {
+        setSelectedBookingDate(new Date(bookingYear, bookingMonth, day));
+      };
+
+      const handleToggleReservation = (slot) => {
+        const isReserved = confirmedSlots.includes(slot.id);
+
+        if (isReserved) {
+          // Cancelar: Reembolsar
+          setConfirmedSlots(prev => prev.filter(id => id !== slot.id));
+          setBarcaCoins(prev => prev + slot.cost);
+        } else {
+          // Reservar: Cobrar (Funciona igual para reserva standard y para 'pagar acceso')
+          if (barcaCoins >= slot.cost) {
+            setConfirmedSlots(prev => [...prev, slot.id]);
+            setBarcaCoins(prev => prev - slot.cost);
+          } else {
+            console.log("Saldo insuficiente");
+          }
+        }
+      };
+
+      // Helper para generar slots mockeados basados en la fecha
+      const getDailySlots = (date, category) => {
+        if (!date) return [];
+        const seed = date.getDate() + date.getMonth(); // Pseudo-random básico
+
+        if (category === 'Salas') {
+          return [
+            { id: `s1-${date.getTime()}`, time: '09:00 - 10:30', title: 'Sala Cruyff', capacity: '6 pax', available: seed % 2 === 0, cost: 150, level: 2, img: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=400&q=80' },
+            { id: `s2-${date.getTime()}`, time: '11:00 - 12:30', title: 'Sala Masia', capacity: '10 pax', available: true, cost: 150, level: 2, img: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=400&q=80' },
+            { id: `s3-${date.getTime()}`, time: '15:00 - 16:30', title: 'Sala Directiva', capacity: '12 pax', available: seed % 3 !== 0, cost: 200, level: 4, img: 'https://images.unsplash.com/photo-1517502884422-41e157d44355?auto=format&fit=crop&w=400&q=80' }, // Nivel Alto
+            { id: `s4-${date.getTime()}`, time: '17:00 - 18:30', title: 'Sala 1899', capacity: '4 pax', available: true, cost: 150, level: 3, img: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=400&q=80' },
+          ];
+        } else {
+          // Eventos
+          return [
+            { id: `e1-${date.getTime()}`, time: '19:00 - 21:00', title: 'Networking & Wine', loc: 'Lounge 1899', available: seed % 2 !== 0, cost: 300, level: 2, img: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=400&q=80' },
+            { id: `e2-${date.getTime()}`, time: '20:30 - 22:00', title: 'Cena de Gala', loc: 'Camp Nou Terrace', available: true, cost: 500, level: 5, img: 'https://images.unsplash.com/photo-1533174072545-e8d4aa97edf9?auto=format&fit=crop&w=400&q=80' }, // Nivel Muy Alto
+          ];
+        }
+      };
+
+      // Helper para conectar con un socio
+      const toggleConnection = (id) => {
+        if (pendingConnections.includes(id)) {
+          setPendingConnections(prev => prev.filter(mid => mid !== id));
+        } else {
+          setPendingConnections(prev => [...prev, id]);
+        }
+      };
+
+      // HELPER PARA INICIAR CHAT CON SOLICITUD
+      const handleStartChat = (user) => {
+        const chatUser = {
+          ...user,
+          sector: user.sector || user.company || 'Business',
+          reason: user.reason || `Conexión con ${user.name}`
+        };
+        setActiveChat(chatUser);
+        setIsMsgOpen(true);
+        setMessageInput('');
+      };
+
+      // --- HELPER PARA HORARIO MANAGER ---
+      const isManagerAvailable = () => {
+        // Simulación: Disponible entre 9am y 6pm (18:00)
+        // En producción se usaría new Date() real o servidor
+        const hour = 17; // Simulamos que son las 5PM para que salga disponible
+        // Si ponemos 20, saldría offline
+        return hour >= 9 && hour < 18;
+      };
+
+      // --- LÓGICA DE SOPORTE UNIFICADO (Top Bar) ---
+      const handleSupportClick = () => {
+        // ABRIR CENTRO DE MENSAJES (SELECCIÓN)
+        setIsMsgOpen(true);
+        setActiveChat(null); // Null activa la vista de "Inbox"
+      };
+
+      // --- GENERADOR DE RESPUESTAS IA BASADO EN CONTEXTO ---
+      const generateAIResponse = (text) => {
+        const lowerText = text.toLowerCase();
+
+        if (lowerText.includes('palco') || lowerText.includes('asiento') || lowerText.includes('sector') || lowerText.includes('ubicación')) {
+          return AI_KNOWLEDGE_BASE.location[Math.floor(Math.random() * AI_KNOWLEDGE_BASE.location.length)];
+        }
+        if (lowerText.includes('hora') || lowerText.includes('llegar') || lowerText.includes('apertura') || lowerText.includes('puertas')) {
+          return AI_KNOWLEDGE_BASE.logistics[Math.floor(Math.random() * AI_KNOWLEDGE_BASE.logistics.length)];
+        }
+        if (lowerText.includes('aparco') || lowerText.includes('parking') || lowerText.includes('coche') || lowerText.includes('estacionamiento')) {
+          return AI_KNOWLEDGE_BASE.parking[Math.floor(Math.random() * AI_KNOWLEDGE_BASE.parking.length)];
+        }
+        if (lowerText.includes('baño') || lowerText.includes('comida') || lowerText.includes('restaurante') || lowerText.includes('ayuda') || lowerText.includes('socorro') || lowerText.includes('servicios')) {
+          return AI_KNOWLEDGE_BASE.services[Math.floor(Math.random() * AI_KNOWLEDGE_BASE.services.length)];
+        }
+
+        return AI_KNOWLEDGE_BASE.default[Math.floor(Math.random() * AI_KNOWLEDGE_BASE.default.length)];
+      };
+
+      // --- LÓGICA DE ENVÍO DE MENSAJES UNIFICADA ---
+      const handleSendMessage = (textOverride = null) => {
+        const textToSend = textOverride || messageInput;
+        if (!textToSend.trim()) return;
+
+        const newMessage = {
+          id: Date.now(),
+          sender: 'user',
+          text: textToSend,
+          time: 'Ahora'
+        };
+
+        // Si es chat con Manager o IA, actualizamos el historial compartido
+        if (activeChat?.id === 'manager-001' || showAIAssistant) {
+          setSharedMessages(prev => [...prev, newMessage]);
+          setIsTyping(true); // Activar indicador de escritura
+
+          // Simulación de respuesta automática Híbrida (IA Inteligente)
+          setTimeout(() => {
+            const aiResponse = generateAIResponse(textToSend);
+
+            setSharedMessages(prev => [...prev, {
+              id: Date.now() + 1,
+              sender: 'system',
+              text: aiResponse,
+              time: 'Ahora'
+            }]);
+            setIsTyping(false); // Desactivar indicador
+          }, 1500); // 1.5s delay para realismo
+        }
+
+        setMessageInput('');
+      };
+
+      // --- LÓGICA DE LLAMADA MANAGER ---
+      const handleCallManager = () => {
+        if (window.confirm("¿Iniciar llamada segura con tu Gestor Personal?")) {
+          window.location.href = "tel:+34900123456"; // Simulación de protocolo tel
+        }
+      };
+
+      // --- LÓGICA DE COMPRA DE SERVICIOS (NUEVA) ---
+      const handleServiceAction = (service) => {
+        const isIncluded = userData.membershipLevel >= service.level;
+        const isUnlocked = unlockedServices.includes(service.id);
+
+        if (isIncluded || isUnlocked) {
+          // Servicio accesible: Simular acceso
+          console.log(`Accediendo a ${service.name}`);
+          // Aquí podría abrir un modal o navegar, por ahora solo log.
+        } else {
+          // Servicio Premium: Intentar comprar
+          if (barcaCoins >= service.price) {
+            setBarcaCoins(prev => prev - service.price);
+            setUnlockedServices(prev => [...prev, service.id]);
+          } else {
+            console.log("Saldo insuficiente para este servicio");
+          }
+        }
+      };
+
+      // IMPLEMENTACIÓN DE FILTRADO MEMORIZADA
+      const filteredMembers = useMemo(() => {
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        return MEMBERS.filter(member => {
+          const matchesSearch = (
+            member.name?.toLowerCase().includes(lowerSearchTerm) ||
+            member.company?.toLowerCase().includes(lowerSearchTerm) ||
+            member.role?.toLowerCase().includes(lowerSearchTerm)
+          );
+          const matchesSector = activeSector === 'Todos' || member.sector === activeSector;
+          return matchesSector && matchesSearch;
+        });
+      }, [searchTerm, activeSector]);
+
+      // Helper para obtener etiqueta de sección traducida
+      const getSectionLabel = (id) => {
+        const key = id === 'shop' ? 'store' : id;
+        return t.nav ? (t.nav[key] || id) : id;
+      };
+
+      // --- COMPONENTES UI REUTILIZABLES INTERNOS ---
+      const NavButton = ({ section }) => {
+        const isActive = activeTab === section.id;
+        const label = getSectionLabel(section.id);
+        const Icon = section.icon;
+        return (
+          <button
+            onClick={() => setActiveTab(section.id)}
+            className={`flex flex-col items-center justify-center w-full h-full transition-all duration-300 relative group py-1`}
+          >
+            {isActive && (
+              <span className="absolute top-0 w-full max-w-[20px] h-0.5 bg-gradient-to-r from-amber-400 to-amber-600 rounded-b-full shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+            )}
+            <Icon size={20} className={`transition-all duration-300 mb-0.5 ${isActive ? 'text-amber-400' : 'text-slate-500 group-hover:text-slate-300'}`} strokeWidth={isActive ? 2 : 1.5} />
+            <span className={`text-[8px] font-medium tracking-tight uppercase leading-none transition-all duration-300 ${isActive ? 'text-amber-500 opacity-100 transform translate-y-0' : 'text-slate-600 opacity-0 transform translate-y-2 hidden'}`}>
+              {label}
+            </span>
+          </button>
+        );
+      };
+
+      const Header = () => (
+        <header className="fixed top-0 left-0 right-0 h-[70px] bg-slate-950/90 backdrop-blur-md border-b border-white/5 z-50 px-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div onClick={() => setShowProfile(true)} className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-amber-700 p-0.5 cursor-pointer hover:scale-105 transition-transform shadow-[0_0_10px_rgba(251,191,36,0.5)]">
+              <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=100&q=80" alt="Profile" className="w-full h-full rounded-full object-cover border-2 border-slate-900" />
+            </div>
+            <div className="flex flex-col justify-center">
+              <span className="text-white text-sm font-bold tracking-tight leading-tight truncate max-w-[100px] sm:max-w-[140px]">
+                {userData.name}
+              </span>
+              <span className="text-amber-500/90 text-xs font-medium truncate max-w-[100px] sm:max-w-[140px]">
+                {userData.position}
+              </span>
+            </div>
+
+            <div className="hidden sm:flex flex-col items-end mr-3">
+              <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">{t.shop.tab_coins}</span>
+              <div className="flex items-center gap-1">
+                <span className="text-amber-400 font-black text-sm">{barcaCoins.toLocaleString()}</span>
+                <div className="w-4 h-4 rounded-full bg-gradient-to-br from-yellow-300 to-amber-600 flex items-center justify-center shadow-[0_0_10px_rgba(245,158,11,0.5)]">
+                  <span className="text-[10px] font-bold text-black">¢</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowCard(true)}
+              className="ml-1 p-1.5 rounded-lg bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/30 text-amber-500 hover:scale-110 active:scale-95 transition-all shadow-[0_0_10px_rgba(251,191,36,0.2)] animate-pulse"
+            >
+              <CreditCard size={18} />
+            </button>
+          </div>
+
+          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+            <div className="relative z-10 drop-shadow-[0_0_15px_rgba(20,20,50,0.8)]">
+              <img src="https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg" alt="FC Barcelona Crest" className="h-12 w-auto object-contain" />
+            </div>
+          </div>
+
+          <div className="flex flex-row items-center gap-4 min-w-[30px] justify-end">
+            {/* BOTÓN DE CHAT MODIFICADO: ACCESO A SELECCIÓN */}
+            <button onClick={handleSupportClick} className="relative p-1 rounded-full hover:bg-white/5 transition-colors text-white">
+              <MessageCircle size={24} />
+              <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-slate-900"></span>
+            </button>
+            <div className="flex flex-col items-end justify-center gap-1.5">
+              {Object.keys(FLAG_URLS).map((langKey) => (
+                <button
+                  key={langKey}
+                  onClick={() => setLanguage(langKey)}
+                  className={`relative rounded-sm overflow-hidden transition-all duration-300 transform hover:scale-110 ${language === langKey ? 'ring-1 ring-amber-400 ring-offset-0 opacity-100 scale-105 shadow-[0_0_6px_rgba(251,191,36,0.3)]' : 'opacity-50 grayscale hover:grayscale-0'
+                    }`}
+                >
+                  <img src={FLAG_URLS[langKey]} alt={`${t.header.language} ${langKey}`} className="w-6 h-3.5 object-cover" />
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-1 rounded-full hover:bg-white/5 transition-colors text-amber-500 hover:text-amber-400 focus:outline-none active:scale-95">
+              <MoreVertical size={28} />
+            </button>
+          </div>
+
+          {isMenuOpen && (
+            <div className="absolute top-20 right-4 w-56 bg-slate-900 border border-yellow-600/50 rounded-xl shadow-2xl z-50 overflow-hidden animate-fadeIn origin-top-right">
+              <div className="py-2 overflow-y-auto max-h-[70vh]">
+                <div className="px-4 py-2 border-b border-white/5 mb-1">
+                  <span className="text-[10px] uppercase text-slate-500 font-bold tracking-widest">{t.header.menu}</span>
+                </div>
+                {Object.values(SECTIONS).map((section) => (
+                  <button
+                    key={section.id}
+                    onClick={() => { setActiveTab(section.id); setIsMenuOpen(false); }}
+                    className="w-full text-left px-4 py-3 flex items-center gap-3 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors border-l-2 border-transparent hover:border-amber-500"
+                  >
+                    <section.icon size={16} className={activeTab === section.id ? "text-amber-400" : "text-slate-400"} />
+                    <span className={`text-sm ${activeTab === section.id ? "text-amber-400 font-medium" : ""}`}>
+                      {getSectionLabel(section.id)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </header>
+      );
+
+      const renderContent = () => {
+        const currentSection = Object.values(SECTIONS).find(s => s.id === activeTab);
+
+        // --- VISTA: SERVICIOS (NUEVA IMPLEMENTACIÓN) ---
+        if (activeTab === SECTIONS.SERVICES.id) {
+          return (
+            <div className="flex flex-col w-full min-h-[75vh] animate-fadeIn pt-8 px-6 pb-24">
+              {/* Header */}
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-white tracking-tight">{t.services_view.title}</h2>
+                <p className="text-sm text-slate-400">{t.services_view.subtitle}</p>
+              </div>
+
+              {/* Grid de Servicios */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {SERVICES_CATALOG.map((service) => {
+                  const isIncluded = userData.membershipLevel >= service.level;
+                  const isUnlocked = unlockedServices.includes(service.id);
+                  const isAccessible = isIncluded || isUnlocked;
+                  const canAfford = barcaCoins >= service.price;
+
+                  return (
+                    <div key={service.id} className={`relative bg-slate-900 border rounded-2xl p-5 shadow-lg transition-all group overflow-hidden ${isAccessible ? 'border-green-500/30 bg-green-900/5' : 'border-slate-800 hover:border-amber-500/50'}`}>
+
+                      {/* Imagen del Servicio (NUEVO) */}
+                      <div className="h-32 w-full mb-4 rounded-xl overflow-hidden relative">
+                        <img src={service.img} alt={service.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-80"></div>
+                        <div className="absolute bottom-2 right-2">
+                          {isIncluded ? (
+                            <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-900/80 backdrop-blur-sm px-2 py-1 rounded-full border border-emerald-500/30">
+                              <Check size={12} /> {t.services_view.included}
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 text-[10px] font-bold text-amber-500 bg-amber-900/80 backdrop-blur-sm px-2 py-1 rounded-full border border-amber-500/30">
+                              <Lock size={12} /> {t.services_view.premium}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Icono y Título */}
+                      <div className="flex items-center gap-4 mb-3">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${isAccessible ? 'bg-green-500/10 text-green-400' : 'bg-slate-800 text-slate-400 group-hover:text-amber-400'}`}>
+                          <service.icon size={24} />
+                        </div>
+                        <div className="flex-1 pr-16">
+                          <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">{service.category}</span>
+                          <h3 className="text-lg font-bold text-white leading-tight">{service.name}</h3>
+                        </div>
+                      </div>
+
+                      {/* Descripción */}
+                      <p className="text-sm text-slate-400 mb-5 line-clamp-2 h-10">{service.desc}</p>
+
+                      {/* Acción */}
+                      {isAccessible ? (
+                        <button
+                          onClick={() => handleServiceAction(service)}
+                          className="w-full py-3 rounded-xl bg-slate-800 hover:bg-green-600 text-white font-bold text-sm border border-white/5 transition-all flex items-center justify-center gap-2 group-hover:border-green-500/50"
+                        >
+                          {t.services_view.access} <ArrowLeft size={16} className="rotate-180" />
+                        </button>
+                      ) : (
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] text-slate-500">{t.services_view.price}</span>
+                            <span className={`text-lg font-black ${canAfford ? 'text-amber-400' : 'text-red-400'}`}>
+                              {service.price.toLocaleString()} <span className="text-sm font-normal text-slate-400">¢</span>
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleServiceAction(service)}
+                            disabled={!canAfford}
+                            className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 ${canAfford ? 'bg-amber-500 hover:bg-amber-400 text-black shadow-lg shadow-amber-500/20' : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5'}`}
+                          >
+                            {canAfford ? t.services_view.buy : t.services_view.insufficient} <Unlock size={14} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        }
+
+        // --- VISTA: MANAGER ---
+        if (activeTab === SECTIONS.MANAGER.id) {
+          const managerAvailable = isManagerAvailable();
+
+          return (
+            <div className="flex flex-col w-full min-h-[75vh] animate-fadeIn pt-8 px-6 pb-24">
+
+              {/* Header */}
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-white tracking-tight">{t.manager.title}</h2>
+                <p className="text-sm text-slate-400">{t.manager.subtitle}</p>
+              </div>
+
+              {/* CARD 1: GESTOR HUMANO */}
+              <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl mb-6 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-blue-900/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+
+                <div className="flex items-start gap-4 mb-5 relative z-10">
+                  <div className="relative">
+                    <img src="https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=150&q=80" alt="Manager" className="w-16 h-16 rounded-full object-cover border-2 border-slate-700" />
+                    <div className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-slate-900 ${managerAvailable ? 'bg-green-500' : 'bg-slate-500'}`}></div>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-amber-500 font-bold uppercase tracking-wider mb-1 block">{t.manager.human.title}</span>
+                    <h3 className="text-xl font-bold text-white leading-tight">Jordi Cruyff</h3>
+                    <p className="text-xs text-slate-400">{t.manager.human.role}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 mb-6 bg-slate-950/50 p-2 rounded-lg border border-white/5">
+                  <Clock size={14} className="text-slate-400" />
+                  <span className="text-xs text-slate-300 font-medium">{t.manager.human.availability}</span>
+                  <span className="mx-1 text-slate-600">|</span>
+                  <span className={`text-xs font-bold ${managerAvailable ? 'text-green-400' : 'text-slate-500'}`}>
+                    {managerAvailable ? t.manager.human.status_online : t.manager.human.status_offline}
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+                  {t.manager.human.desc}
+                </p>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {/* BOTÓN 1: LLAMAR (Protocolo tel:) */}
+                  <button
+                    onClick={handleCallManager}
+                    disabled={!managerAvailable}
+                    className={`flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-xs transition-all ${managerAvailable ? 'bg-green-600 hover:bg-green-500 text-white shadow-lg' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`}
+                  >
+                    <Phone size={16} /> {t.manager.human.btn_call}
+                  </button>
+
+                  {/* BOTÓN 2: MENSAJE (Abre Chat Directo) - REEMPLAZA VIDEOLLAMADA */}
+                  <button
+                    onClick={() => handleStartChat(MANAGER_PROFILE)}
+                    disabled={!managerAvailable}
+                    className={`flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-xs transition-all border ${managerAvailable ? 'border-slate-600 text-white hover:bg-white hover:text-black' : 'border-slate-800 text-slate-600 cursor-not-allowed'}`}
+                  >
+                    <MessageSquare size={16} /> {t.manager.human.btn_video}
+                  </button>
+
+                  <button className="col-span-2 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-white/5 transition-all flex items-center justify-center gap-2">
+                    <CalendarCheck size={16} /> {t.manager.human.btn_schedule}
+                  </button>
+                </div>
+              </div>
+
+              {/* SEPARADOR "O" */}
+              <div className="flex items-center justify-center gap-4 mb-6">
+                <div className="h-[1px] bg-slate-800 w-full"></div>
+                <span className="text-[10px] text-slate-500 font-bold uppercase">O</span>
+                <div className="h-[1px] bg-slate-800 w-full"></div>
+              </div>
+
+              {/* CARD 2: AI BOT */}
+              <div className="w-full bg-gradient-to-br from-cyan-950/50 to-slate-900 border border-cyan-900/30 hover:border-cyan-500/50 rounded-2xl p-6 shadow-xl transition-all group">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-cyan-900/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
+                      <Bot size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">{t.manager.bot.title}</h3>
+                      <p className="text-xs text-cyan-400 font-bold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span> {t.manager.bot.status}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-400 mb-5 leading-relaxed">
+                  {t.manager.bot.desc}
+                </p>
+
+                <button
+                  onClick={() => setShowAIAssistant(true)}
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white text-sm font-bold shadow-lg shadow-cyan-900/20 transition-all flex items-center justify-center gap-2"
+                >
+                  <MessageSquare size={18} /> {t.manager.bot.btn_chat}
+                </button>
+              </div>
+
+            </div>
+          );
+        }
+
+        // --- VISTA: RESERVAS (Nuevo Calendario 2026) ---
+        if (activeTab === SECTIONS.BOOKINGS.id) {
+          const daysInCurrentMonth = getDaysInMonth(bookingYear, bookingMonth);
+          const firstDay = getFirstDayOfMonth(bookingYear, bookingMonth);
+          const emptyDays = Array(firstDay).fill(null);
+          const daysArray = Array.from({ length: daysInCurrentMonth }, (_, i) => i + 1);
+
+          const currentSlots = selectedBookingDate ? getDailySlots(selectedBookingDate, bookingCategory) : [];
+
+          return (
+            <div className="flex flex-col w-full min-h-[75vh] animate-fadeIn pt-6 px-6 pb-24" onClick={() => { if (isMenuOpen) setIsMenuOpen(false); }}>
+
+              {/* Header Sección */}
+              <div className="flex justify-between items-end mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+                    {t.bookings.title} <span className="text-amber-500 font-mono">{bookingYear}</span>
+                  </h2>
+                  <p className="text-sm text-slate-400">{t.bookings.subtitle}</p>
+                </div>
+
+                {/* Toggle Categoría */}
+                <div className="flex bg-slate-900 rounded-lg p-1 border border-white/10">
+                  <button
+                    onClick={() => { setBookingCategory('Salas'); setSelectedBookingDate(null); }}
+                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${bookingCategory === 'Salas' ? 'bg-amber-500 text-black shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    {t.bookings.rooms}
+                  </button>
+                  <button
+                    onClick={() => { setBookingCategory('Eventos'); setSelectedBookingDate(null); }}
+                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${bookingCategory === 'Eventos' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    {t.bookings.events}
+                  </button>
+                </div>
+              </div>
+
+              {/* Calendario Container */}
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl mb-6">
+
+                {/* Navegación Mes */}
+                <div className="flex items-center justify-between mb-4 px-2">
+                  <button onClick={handlePrevMonth} disabled={bookingMonth === 0} className={`p-2 rounded-full hover:bg-white/10 transition-colors ${bookingMonth === 0 ? 'text-slate-600' : 'text-white'}`}>
+                    <ChevronLeft size={20} />
+                  </button>
+                  <span className="text-lg font-bold text-white capitalize w-32 text-center">
+                    {t.bookings.months[bookingMonth]}
+                  </span>
+                  <button onClick={handleNextMonth} disabled={bookingMonth === 11} className={`p-2 rounded-full hover:bg-white/10 transition-colors ${bookingMonth === 11 ? 'text-slate-600' : 'text-white'}`}>
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+
+                {/* Grid Dias Semana */}
+                <div className="grid grid-cols-7 mb-2 text-center">
+                  {t.bookings.weekDays.map(day => (
+                    <div key={day} className="text-[10px] font-bold text-slate-500 uppercase">{day}</div>
+                  ))}
+                </div>
+
+                {/* Grid Dias Mes */}
+                <div className="grid grid-cols-7 gap-1">
+                  {emptyDays.map((_, i) => <div key={`empty-${i}`} className="h-10"></div>)}
+                  {daysArray.map(day => {
+                    const isSelected = selectedBookingDate && selectedBookingDate.getDate() === day && selectedBookingDate.getMonth() === bookingMonth;
+                    // Simular disponibilidad visual (solo ejemplo)
+                    const hasAvailability = (day + bookingMonth) % 7 !== 0;
+                    const isMatchDay = MATCH_SCHEDULE.includes(day);
+
+                    return (
+                      <button
+                        key={day}
+                        disabled={!hasAvailability}
+                        onClick={() => handleDateClick(day)}
+                        className={`
+                           h-10 rounded-lg flex items-center justify-center text-sm font-medium transition-all relative
+                           ${isSelected
+                            ? 'bg-amber-500 text-black font-bold shadow-lg scale-105 z-10'
+                            : isMatchDay
+                              ? 'bg-blue-900/50 text-blue-200 border border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                              : hasAvailability
+                                ? 'bg-slate-800 text-slate-200 hover:bg-slate-700 hover:border hover:border-amber-500/50'
+                                : 'bg-slate-900/50 text-slate-600 cursor-not-allowed opacity-50'
+                          }
+                         `}
+                      >
+                        {day}
+                        {isSelected && <span className="absolute -bottom-1 w-1 h-1 bg-black rounded-full"></span>}
+                        {!isSelected && isMatchDay && <span className="absolute -top-1 -right-1 flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span></span>}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-4 flex items-center gap-4 justify-center text-[10px] text-slate-500 flex-wrap">
+                  <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-slate-800 border border-slate-600"></div> Disponible</div>
+                  <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-500"></div> Seleccionado</div>
+                  <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.5)]"></div> Día de Partido</div>
+                  <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-slate-900 border border-slate-800 opacity-50"></div> Ocupado</div>
+                </div>
+              </div>
+
+              {/* Panel de Detalles (Slots) */}
+              {selectedBookingDate ? (
+                <div className="animate-fadeIn">
+                  <h3 className="text-white font-bold text-lg mb-3 flex items-center gap-2">
+                    {bookingCategory === 'Salas' ? <Briefcase size={18} className="text-amber-500" /> : <Calendar size={18} className="text-blue-500" />}
+                    {t.bookings.available_slots}
+                    <span className="text-xs font-normal text-slate-400 ml-auto bg-slate-800 px-2 py-1 rounded">
+                      {selectedBookingDate.getDate()} {t.bookings.months[bookingMonth]}
+                    </span>
+                  </h3>
+
+                  <div className="flex flex-col gap-3">
+                    {currentSlots.length > 0 ? (
+                      currentSlots.map((slot) => {
+                        const isConfirmed = confirmedSlots.includes(slot.id);
+                        const userLevel = userData.membershipLevel;
+                        const isAccessAllowed = userLevel >= slot.level;
+                        const canAfford = barcaCoins >= slot.cost;
+
+                        return (
+                          <div key={slot.id} className={`w-full p-4 rounded-xl border transition-all flex items-center gap-4 ${isConfirmed ? 'bg-green-900/10 border-green-500' : (isAccessAllowed ? 'bg-slate-900 border-slate-800' : 'bg-slate-900 border-amber-500/30')}`}>
+                            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
+                              <img src={slot.img} alt={slot.title} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-white font-bold text-sm mb-1 flex items-center gap-2">
+                                {slot.title}
+                                {!isAccessAllowed && <Lock size={12} className="text-amber-500" />}
+                              </h4>
+                              <div className="flex items-center gap-2 text-xs text-slate-400">
+                                <Clock size={12} /> {slot.time}
+                                <span className="text-slate-600">|</span>
+                                {bookingCategory === 'Salas' ? <Users size={12} /> : <MapPin size={12} />}
+                                {slot.capacity || slot.loc}
+                              </div>
+                            </div>
+
+                            {isConfirmed ? (
+                              <button
+                                onClick={() => handleToggleReservation(slot)}
+                                className="px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/50 text-red-400 text-xs font-bold flex items-center gap-1 hover:bg-red-500/20 transition-all"
+                              >
+                                <X size={14} /> {t.bookings.cancel} (+{slot.cost}¢)
+                              </button>
+                            ) : !slot.available ? (
+                              <button disabled className="px-4 py-2 rounded-lg bg-slate-800 text-slate-500 text-xs font-bold cursor-not-allowed">
+                                {t.bookings.occupied}
+                              </button>
+                            ) : isAccessAllowed ? (
+                              <button
+                                onClick={() => handleToggleReservation(slot)}
+                                disabled={!canAfford}
+                                className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-md active:scale-95 ${canAfford ? (bookingCategory === 'Salas' ? 'bg-amber-500 hover:bg-amber-400 text-black' : 'bg-blue-500 hover:bg-blue-400 text-white') : 'bg-slate-700 text-slate-400 cursor-not-allowed'}`}
+                              >
+                                {canAfford ? `${t.bookings.book} • ${slot.cost} ¢` : `${t.services_view.insufficient} (${slot.cost}¢)`}
+                              </button>
+                            ) : (
+                              // CASO B: ACCESO RESTRINGIDO
+                              <div className="flex flex-col gap-2 items-end">
+                                <button
+                                  onClick={() => handleToggleReservation(slot)}
+                                  disabled={!canAfford}
+                                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${canAfford ? 'bg-amber-500/10 text-amber-500 border-amber-500/50 hover:bg-amber-500 hover:text-black' : 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'}`}
+                                >
+                                  {t.bookings.access_for} {slot.cost}¢
+                                </button>
+                                <button
+                                  onClick={() => setShowUpgrade(true)}
+                                  className="text-[10px] text-slate-400 hover:text-white underline decoration-slate-600 underline-offset-2 flex items-center gap-1"
+                                >
+                                  <Star size={10} className="text-yellow-500" /> {t.bookings.upgrade}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="p-8 text-center text-slate-500 bg-slate-900/50 rounded-xl border border-dashed border-slate-800">
+                        {t.bookings.no_availability}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-10 opacity-50">
+                  <CalendarClock size={40} className="mx-auto mb-3 text-slate-600" />
+                  <p className="text-sm text-slate-400">{t.bookings.select_day}</p>
+                </div>
+              )}
+
+            </div>
+          );
+        }
+
+        if (activeTab === SECTIONS.DIRECTORY.id) {
+          return (
+            <div className="flex flex-col w-full min-h-[75vh] animate-fadeIn pt-8 px-6 pb-24" onClick={() => { if (isMenuOpen) setIsMenuOpen(false); }}>
+              <div className="mb-8">
+                <div className="relative w-full mb-4">
+                  <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder={t.directory.search_placeholder} className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition-colors placeholder-slate-500" />
+                  <div className="absolute left-3 top-3 text-slate-500"><Search size={18} /></div>
+                </div>
+                <div className="flex overflow-x-auto gap-2 py-2 mb-6 no-scrollbar">
+                  {SECTORS.map((sector) => (
+                    <button key={sector} onClick={() => setActiveSector(sector)} className={`rounded-full px-4 py-1.5 text-xs font-bold whitespace-nowrap transition-colors border ${activeSector === sector ? 'bg-yellow-500 text-slate-900' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'}`}>
+                      {t.directory.sectors[sector] || sector}
+                    </button>
+                  ))}
+                </div>
+                <h4 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-3">{t.directory.found_partners} ({filteredMembers.length})</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  {filteredMembers.map((member) => (
+                    <div key={member.id} className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col items-center text-center shadow-md">
+                      <img src={member.img} alt={member.name} className="w-14 h-14 rounded-full mb-2 object-cover border border-slate-700" />
+                      <h5 className="text-white font-bold text-sm leading-tight mb-0.5 truncate w-full px-1">{member.name}</h5>
+                      <p className="text-[10px] text-slate-400 mb-1 truncate w-full px-1">{member.role}</p>
+                      <p className="text-[10px] text-amber-500 font-medium mb-3 truncate w-full px-1">{member.company}</p>
+                      <button onClick={() => toggleConnection(member.id)} className={`w-full py-2 rounded-lg text-xs font-bold border transition-all ${pendingConnections.includes(member.id) ? 'bg-green-500/10 border-green-500 text-green-400' : 'border-slate-600 text-slate-300 hover:bg-white hover:text-slate-900 hover:border-white'}`}>
+                        {pendingConnections.includes(member.id) ? t.directory.pending : t.directory.connect}
+                      </button>
+                    </div>
+                  ))}
+                  {filteredMembers.length === 0 && (<div className="col-span-2 py-8 text-center text-slate-500 text-sm">{t.directory.no_results}</div>)}
+                </div>
+                <h4 className="flex items-center gap-2 text-cyan-400 font-bold uppercase tracking-wider mb-3 mt-8"><Sparkles size={16} /> {t.directory.recommended_match}</h4>
+                <div className="w-full bg-gradient-to-r from-cyan-900/30 to-slate-900 border border-cyan-700/50 rounded-xl p-4 flex items-center gap-4 mb-6 shadow-xl">
+                  <img src={recommendedMatch.img} alt={recommendedMatch.name} className="w-16 h-16 rounded-full object-cover border-2 border-cyan-500/50" />
+                  <div className="flex-1">
+                    <h5 className="text-white font-bold text-lg leading-tight">{recommendedMatch.name}</h5>
+                    <p className="text-slate-300 text-sm">{recommendedMatch.role} @ {recommendedMatch.company}</p>
+                    <p className="text-cyan-400 text-xs mt-1">{t.suggestions.affinity}: {recommendedMatch.affinity}%</p>
+                    <p className="text-slate-500 text-[11px] mt-0.5">{recommendedMatch.reason}</p>
+                  </div>
+                  <button onClick={() => handleStartChat(recommendedMatch)} className="flex-shrink-0 px-3 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-900 text-xs font-bold transition-all">{t.directory.start_contact}</button>
+                </div>
+              </div>
+              <div className="mb-8 mt-6">
+                <h3 className="flex items-center gap-2 text-white font-bold text-lg mb-4"><Calendar size={20} className="text-amber-500" />{t.directory.weekly_activities}</h3>
+                <div className="flex flex-col gap-3">
+                  {networkEvents.map((event) => (
+                    <div key={event.id} onClick={() => { setSelectedNetEvent(event); setIsJoined(false); }} className="w-full bg-slate-900 border border-slate-800 hover:border-amber-500/30 rounded-xl p-4 flex items-center gap-4 cursor-pointer transition-all shadow-md active:scale-[0.99]">
+                      <div className="flex-shrink-0 w-14 h-14 bg-slate-800 rounded-lg border border-white/5 flex flex-col items-center justify-center">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase">{event.day}</span>
+                        <span className="text-xl text-white font-bold leading-none">{event.date.split(' ')[0]}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start">
+                          <h4 className="text-white font-medium text-sm truncate mb-0.5">{event.title}</h4>
+                          {event.reward && (
+                            <span className="text-[10px] font-bold text-amber-500 bg-amber-900/20 px-1.5 py-0.5 rounded border border-amber-500/20 whitespace-nowrap ml-2">
+                              +{event.reward} ¢
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-slate-400 text-xs truncate flex items-center gap-1.5"><Clock size={10} /> {event.time} <span className="text-slate-600">•</span><MapPin size={10} /> {event.loc}</p>
+                      </div>
+                      <ChevronRight size={16} className="text-slate-600" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="mb-8 mt-6">
+                <h3 className="flex items-center gap-2 text-white font-bold text-lg mb-4"><Trophy size={20} className="text-yellow-500" />{t.directory.networking_leaders}</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {rankingData.map((user) => (
+                    <div key={user.id} className={`flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900 shadow-lg relative ${user.rank === 1 ? 'border-2 border-yellow-500 bg-slate-800/80 transform -translate-y-2 z-10' : 'border border-slate-800'}`}>
+                      {user.rank === 1 && (<div className="absolute -top-3 text-yellow-500"><Crown size={20} fill="currentColor" /></div>)}
+                      <img src={user.img} alt={user.name} className={`rounded-full object-cover mb-2 ${user.rank === 1 ? 'w-16 h-16 border-2 border-yellow-500' : 'w-12 h-12 border border-slate-600 grayscale opacity-80'}`} />
+                      <span className={`text-center font-bold text-xs leading-tight mb-0.5 truncate w-full ${user.rank === 1 ? 'text-white' : 'text-slate-300'}`}>{user.name.split(' ')[0]}</span>
+                      <span className="text-[9px] text-slate-500 truncate w-full text-center mb-1">{user.company}</span>
+                      <span className={`text-[10px] font-mono ${user.rank === 1 ? 'text-yellow-400 font-bold' : 'text-slate-400'}`}>{user.points}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="mb-24 mt-6">
+                <h3 className="flex items-center gap-2 text-white font-bold text-lg mb-4"><Briefcase size={20} className="text-amber-500" />{t.directory.business_opps}</h3>
+                <div className="flex flex-col gap-3">
+                  {businessOpps.map((opp) => (
+                    <div key={opp.id} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 mb-3">
+                      <div className="flex justify-between items-start mb-2">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${opp.type === 'DEMANDA' ? 'bg-red-900/50 text-red-300' : opp.type === 'OFERTA' ? 'bg-green-900/50 text-green-300' : 'bg-yellow-900/50 text-yellow-300'}`}>{t.directory.opp_types[opp.type]}</span>
+                        <span className="text-[10px] text-slate-500">{opp.time}</span>
+                      </div>
+                      <h4 className="text-white font-bold text-sm mb-1">{opp.title}</h4>
+                      <p className="text-slate-400 text-xs line-clamp-2 mb-3 leading-relaxed">{opp.desc}</p>
+                      <div className="flex justify-between items-end border-t border-slate-800 pt-3">
+                        <div className="flex flex-col"><span className="text-[10px] text-slate-300 font-medium">{opp.author}</span><span className="text-[9px] text-slate-500">{opp.company}</span></div>
+                        <button className="px-3 py-1.5 rounded border border-slate-600 text-[10px] font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">{t.directory.interested}</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {selectedNetEvent && (
+                <div className="fixed inset-0 z-[120] bg-black/90 backdrop-blur-sm flex items-center justify-center p-6 animate-fadeIn">
+                  <div className="absolute inset-0" onClick={() => setSelectedNetEvent(null)}></div>
+                  <div className="relative w-full max-w-sm bg-slate-900 border border-amber-500/30 rounded-2xl shadow-2xl p-6 overflow-hidden flex flex-col max-h-[85vh]">
+                    <div className="flex justify-between items-start mb-4">
+                      <span className="px-2 py-1 rounded bg-amber-500/20 text-amber-400 text-[10px] font-bold uppercase border border-amber-500/40">{t.directory.modal.networking}</span>
+                      <button onClick={() => setSelectedNetEvent(null)} className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"><X size={20} /></button>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white leading-tight mb-2 flex items-center gap-2">
+                      {selectedNetEvent.title}
+                      {userData.membershipLevel < selectedNetEvent.level && <Lock size={16} className="text-amber-500" />}
+                    </h3>
+                    <div className="flex items-center gap-4 text-sm text-slate-300 mb-6 pb-6 border-b border-white/10">
+                      <div className="flex items-center gap-1.5"><Calendar size={16} className="text-amber-500" />{selectedNetEvent.date}</div>
+                      <div className="flex items-center gap-1.5"><Clock size={16} className="text-amber-500" />{selectedNetEvent.time}</div>
+                    </div>
+                    <div className="flex-1 overflow-y-auto space-y-5 mb-6">
+                      <div><h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2"><MapPin size={14} /> {t.directory.modal.location}</h4><p className="text-white text-sm bg-slate-800 p-3 rounded-lg border border-white/5">{selectedNetEvent.loc}</p></div>
+                      <div><h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2"><MessageCircle size={14} /> {t.directory.modal.description}</h4><p className="text-slate-300 text-sm leading-relaxed">{selectedNetEvent.desc}</p></div>
+                      <div><h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2"><Users size={14} /> {t.directory.modal.attendance}</h4><div className="flex items-center gap-2 text-sm text-white"><div className="flex -space-x-2">{[1, 2, 3].map(i => (<div key={i} className="w-6 h-6 rounded-full bg-slate-700 border border-slate-900"></div>))}</div><span>+{selectedNetEvent.attendees} {t.directory.modal.confirmed_attendees}</span></div></div>
+                    </div>
+                    {/* LÓGICA DE CONTROL DE ACCESO EN MODAL DIRECTIO */}
+                    {!isJoined ? (
+                      userData.membershipLevel >= selectedNetEvent.level ? (
+                        <button onClick={() => setIsJoined(true)} className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold text-sm shadow-lg transition-all flex items-center justify-center gap-2">{t.directory.modal.confirm_attendance}</button>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          <button className="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold text-sm shadow-lg transition-all flex items-center justify-center gap-2">
+                            {t.directory.modal.pay_access} ({selectedNetEvent.cost}¢)
+                          </button>
+                          <button onClick={() => setShowUpgrade(true)} className="text-xs text-center text-slate-400 hover:text-white underline decoration-slate-600 underline-offset-4 py-2">
+                            {t.directory.modal.upgrade_access}
+                          </button>
+                        </div>
+                      )
+                    ) : (
+                      <button disabled className="w-full py-3.5 rounded-xl bg-green-500/10 border border-green-500 text-green-400 font-bold text-sm flex items-center justify-center gap-2 cursor-default"><CheckCircle size={18} /> {t.directory.modal.attendance_confirmed}</button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        if (activeTab === SECTIONS.HOME.id) {
+          return (
+            <div className="flex flex-col w-full min-h-[75vh] animate-fadeIn pt-8 px-6 pb-24" onClick={() => { if (isMenuOpen) setIsMenuOpen(false); }}>
+              <div className="w-full flex flex-row justify-between items-start mb-8">
+                <div className="flex-1 pr-4">
+                  <h1 className="text-4xl font-bold text-white tracking-tight leading-none mb-2">{t.welcome.hello}, <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-white to-slate-200">{userData.name.split(' ')[0]}</span></h1>
+                  <button onClick={() => setShowUpgrade(true)} className="inline-block px-3 py-1 bg-yellow-500/10 text-yellow-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest rounded-full border border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.1)] hover:scale-105 hover:bg-yellow-500/20 hover:border-yellow-500/60 transition-all cursor-pointer">{t.welcome.member}</button>
+                </div>
+                <div className="flex gap-3 flex-shrink-0 pt-1">
+                  {/* --- ELEMENTO ELIMINADO: CHAT BOT FLOTANTE EN HOME --- */}
+                  <button onClick={() => setShowNotifications(true)} className="relative w-12 h-12 rounded-2xl bg-slate-800 border border-white/10 flex items-center justify-center text-white hover:bg-slate-700 hover:border-white/30 transition-all shadow-lg"><Bell size={24} /><span className="absolute top-2.5 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-slate-900 animate-pulse"></span></button>
+                </div>
+              </div>
+              <div className="w-full bg-slate-900 rounded-2xl border border-yellow-500/30 relative overflow-hidden mb-10 shadow-2xl group transition-transform hover:scale-[1.01]">
+                <img src="https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg" className="absolute -left-6 top-1/2 -translate-y-1/2 h-40 w-40 opacity-10 grayscale group-hover:grayscale-0 transition-all duration-700 pointer-events-none" alt="FCB" />
+                <img src="https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg" className="absolute -right-6 top-1/2 -translate-y-1/2 h-40 w-40 opacity-10 grayscale group-hover:grayscale-0 transition-all duration-700 pointer-events-none" alt="RMA" />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none"><span className="text-[120px] font-black text-white/5 leading-none select-none">VS</span></div>
+                <div className="relative z-10 p-6 flex flex-col items-center text-center">
+                  <span className="text-amber-500 text-[10px] font-bold tracking-[0.3em] mb-2 uppercase drop-shadow-md">{t.match.title}</span>
+                  <h3 className="text-2xl sm:text-3xl font-black text-white italic tracking-tighter mb-1 drop-shadow-lg">FC BARCELONA <span className="text-slate-400 font-light not-italic text-xl">vs</span> REAL MADRID</h3>
+                  <div className="flex items-center gap-2 text-slate-300 text-xs font-medium mb-6 bg-black/30 px-3 py-1 rounded-full border border-white/5 backdrop-blur-sm"><CalendarCheck size={12} className="text-amber-500" /><span>{t.match.date}</span><span className="text-slate-600">|</span><MapPin size={12} className="text-amber-500" /><span>Spotify Camp Nou</span></div>
+                  <div className="w-full grid grid-cols-3 gap-2 py-4 border-t border-b border-slate-700/50 my-4 divide-x divide-slate-700 bg-slate-950/30 backdrop-blur-sm rounded-lg">
+                    <div className="flex flex-col items-center justify-center px-1"><span className="text-xs text-yellow-500 font-bold mb-0.5">{t.match.pre.time}</span><span className="text-[10px] text-slate-400 tracking-wider uppercase mb-1">{t.match.pre.phase}</span><span className="text-[11px] leading-tight text-white font-medium">{t.match.pre.act}</span></div>
+                    <div className="flex flex-col items-center justify-center px-1"><span className="text-xs text-yellow-500 font-bold mb-0.5">{t.match.dur.time}</span><span className="text-[10px] text-slate-400 tracking-wider uppercase mb-1">{t.match.dur.phase}</span><span className="text-[11px] leading-tight text-white font-medium">{t.match.dur.act}</span></div>
+                    <div className="flex flex-col items-center justify-center px-1"><span className="text-xs text-yellow-500 font-bold mb-0.5">{t.match.post.time}</span><span className="text-[10px] text-slate-400 tracking-wider uppercase mb-1">{t.match.post.phase}</span><span className="text-[11px] leading-tight text-white font-medium">{t.match.post.act}</span></div>
+                  </div>
+
+                  {/* Sección de Asistentes: CENTRADA, GRANDE Y RELEVANTE */}
+                  <div
+                    onClick={() => setShowAttendees(true)}
+                    className="w-full mb-6 mt-2 bg-gradient-to-b from-white/5 to-black/40 border border-amber-500/30 hover:border-amber-500 rounded-xl p-5 flex flex-col items-center justify-center cursor-pointer group/attendees transition-all shadow-[0_0_20px_rgba(0,0,0,0.3)]"
+                  >
+                    {/* Título de la Sección */}
+                    <span className="text-xs text-amber-500 font-bold uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                      <Users size={14} /> {t.home.attendees_box.title}
+                    </span>
+
+                    {/* Facepile GRANDE y CENTRADO */}
+                    <div className="flex items-center justify-center mb-4">
+                      <div className="flex -space-x-5 hover:space-x-1 transition-all duration-300">
+                        {ATTENDEES.slice(0, 4).map((att, i) => (
+                          <div key={i} className="relative w-14 h-14 rounded-full border-[3px] border-slate-900 overflow-hidden ring-2 ring-white/10 group-hover/attendees:ring-amber-400 transition-all shadow-xl z-10 hover:z-20 hover:scale-110">
+                            <img src={att.image} className="w-full h-full object-cover" alt="Attendee" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Call to Action Inferior */}
+                    <div className="flex items-center gap-2 text-slate-300 group-hover/attendees:text-white transition-colors">
+                      <span className="text-sm font-medium">+12 {t.home.attendees_box.members_confirmed}</span>
+                      <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center group-hover/attendees:bg-amber-500 group-hover/attendees:text-black transition-all">
+                        <ChevronRight size={14} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {!isAttending ? (
+                    <button onClick={() => setIsAttending(true)} className="w-full py-3.5 rounded-xl bg-gradient-to-r from-yellow-600 to-amber-500 hover:from-yellow-500 hover:to-amber-400 text-slate-900 font-bold text-sm tracking-wide shadow-lg transform active:scale-[0.98] transition-all flex items-center justify-center gap-2"><CheckCircle size={16} className="text-slate-900/80" />{t.match.btn_confirm}</button>
+                  ) : (
+                    <div className="w-full animate-fadeIn">
+                      <div className="w-full py-3 rounded-xl bg-green-500/10 border border-green-500/50 flex flex-col items-center justify-center mb-2"><div className="flex items-center gap-2 text-green-400 font-bold text-sm mb-0.5"><CheckCircle size={18} />{t.match.msg_confirmed.split('! ')[0]}!</div><span className="text-[10px] text-green-500/80">{t.match.msg_confirmed.split('! ')[1]}</span></div>
+                      <button onClick={() => setIsAttending(false)} className="w-full py-1 text-[10px] text-slate-500 hover:text-red-400 transition-colors font-medium">{t.match.btn_cancel}</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="w-full mb-8 animate-fadeIn delay-100">
+                <h3 className="flex items-center gap-2 text-white font-bold text-lg mb-4"><Sparkles size={20} className="text-cyan-400 animate-pulse" />{t.suggestions.title}</h3>
+                <div className="flex flex-col gap-3">
+                  {suggestedProfiles.map((profile) => (
+                    <div key={profile.id} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-row items-center gap-4 hover:border-cyan-900/50 transition-all shadow-md">
+                      <img src={profile.img} alt={profile.name} className="w-14 h-14 rounded-full object-cover border-2 border-slate-800" />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-white font-bold text-sm truncate">{profile.name}</h4>
+                        <p className="text-slate-400 text-xs truncate mb-1">{profile.role} @ {profile.company}</p>
+                        <div className="flex items-center gap-2">
+                          <div className="h-1.5 w-16 bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-emerald-500 to-green-400" style={{ width: `${profile.affinity}%` }}></div></div>
+                          <span className="text-[10px] font-bold text-emerald-400">{t.suggestions.affinity}: {profile.affinity}%</span>
+                        </div>
+                        <div className="mt-1.5 flex items-center gap-1.5 opacity-80"><Sparkles size={10} className="text-cyan-500" /><span className="text-[10px] text-slate-300 leading-tight"><span className="text-slate-500">{t.suggestions.reason} </span> {profile.reason}</span></div>
+                      </div>
+                      <button onClick={() => handleStartChat(profile)} className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-300 text-xs font-medium hover:bg-white hover:text-black hover:border-white transition-colors">{t.suggestions.connect}</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 mb-8 animate-fadeIn delay-150">
+                <div onClick={() => setActiveTab(SECTIONS.DIRECTORY.id)} className="p-4 rounded-xl border border-slate-700 bg-gradient-to-br from-blue-900/40 to-slate-900 cursor-pointer hover:border-blue-500 transition-colors group"><Users size={24} className="text-blue-400 mb-3 group-hover:scale-110 transition-transform" /><h4 className="text-white font-bold text-sm mb-0.5">{t.shortcuts.dir_title}</h4><p className="text-xs text-slate-400">{t.shortcuts.dir_sub}</p></div>
+                <div onClick={() => setActiveTab(SECTIONS.BOOKINGS.id)} className="p-4 rounded-xl border border-slate-700 bg-gradient-to-br from-purple-900/40 to-slate-900 cursor-pointer hover:border-purple-500 transition-colors group"><CalendarClock size={24} className="text-purple-400 mb-3 group-hover:scale-110 transition-transform" /><h4 className="text-white font-bold text-sm mb-0.5">{t.shortcuts.res_title}</h4><p className="text-xs text-slate-400">{t.shortcuts.res_sub}</p></div>
+              </div>
+              <div className="w-full mb-8 animate-fadeIn delay-200">
+                <h3 className="flex items-center gap-2 text-white font-bold text-lg mb-4"><Calendar size={20} className="text-amber-500" />{t.agenda.title}</h3>
+                <div className="flex flex-col gap-3">
+                  {weeklyEvents.map((event) => (
+                    <div key={event.id} onClick={() => setSelectedEvent(event)} className="w-full bg-slate-900 border border-slate-800 hover:border-amber-500/30 rounded-xl p-4 flex items-center gap-4 cursor-pointer transition-all shadow-md active:scale-[0.99]">
+                      <div className="flex-shrink-0 w-12 h-12 bg-slate-800 rounded-lg border border-white/5 flex flex-col items-center justify-center"><span className="text-[9px] text-slate-400 font-bold uppercase">{event.day}</span><span className="text-lg text-white font-bold leading-none">{event.date}</span></div>
+                      <div className="flex-1 min-w-0"><h4 className="text-white font-medium text-sm truncate mb-0.5">{event.title}</h4><p className="text-slate-400 text-xs truncate">{event.time} <span className="text-slate-600">•</span> <span className="text-amber-500/80">{event.type}</span></p></div><ChevronRight size={16} className="text-slate-600" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {showNotifications && (
+                <div className="fixed inset-0 z-[60] flex items-start justify-center pt-24 px-4 bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={() => setShowNotifications(false)}>
+                  <div className="w-full max-w-sm bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 bg-slate-900"><h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2"><Bell size={14} className="text-amber-500" /> Notificaciones</h3><button onClick={() => setShowNotifications(false)} className="text-slate-400 hover:text-white"><X size={18} /></button></div>
+                    <div className="divide-y divide-white/5"><div className="p-4 hover:bg-white/5 transition-colors cursor-pointer group"><div className="flex gap-3"><div className="mt-1"><CheckCircle size={16} className="text-green-500" /></div><div><p className="text-sm text-white font-medium mb-1 group-hover:text-amber-400 transition-colors">Reserva Clásico Confirmada</p><p className="text-xs text-slate-400">Tu palco para el partido del domingo está listo.</p></div></div></div></div>
+                    <div className="p-3 bg-slate-950 text-center"><button className="text-[10px] text-slate-400 hover:text-white uppercase tracking-wider font-bold">Ver todo</button></div>
+                  </div>
+                </div>
+              )}
+              {showAttendees && (
+                <div className="fixed inset-0 z-[80] bg-slate-950 flex flex-col animate-fadeIn">
+                  <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-slate-900 sticky top-0 z-10"><h2 className="text-lg font-bold text-white tracking-wide">{t.modals.attendees_title}</h2><button onClick={() => setShowAttendees(false)} className="p-2 rounded-full bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"><X size={20} /></button></div>
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                    {[...ATTENDEES, ...ATTENDEES, ...ATTENDEES].map((person, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 rounded-xl bg-slate-900/50 border border-white/5 hover:border-amber-500/30 transition-all group">
+                        <div className="flex items-center gap-4"><img src={person.image} alt={person.name} className="w-12 h-12 rounded-full object-cover border border-slate-700" /><div className="flex flex-col"><span className="text-white font-bold text-sm">{person.name}</span><span className="text-slate-400 text-xs">{person.role} @ {person.company}</span><span className="text-[9px] text-amber-500 uppercase font-bold mt-0.5">Gold Member</span></div></div>
+                        <button className="px-3 py-1.5 rounded-lg border border-slate-600 text-xs font-medium text-slate-300 hover:bg-white hover:text-slate-950 hover:border-white transition-all flex items-center gap-1">{t.modals.btn_contact}</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {selectedEvent && (
+                <div className="fixed inset-0 z-[90] bg-black/90 backdrop-blur-sm flex items-center justify-center p-6 animate-fadeIn">
+                  <div className="absolute inset-0" onClick={() => setSelectedEvent(null)}></div>
+                  <div className="relative w-full max-w-sm bg-slate-900 border border-amber-500/30 rounded-2xl shadow-2xl p-6 overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+                    <div className="relative z-10">
+                      <div className="flex justify-between items-start mb-4"><div className="flex flex-col"><span className="text-[10px] text-amber-500 font-bold uppercase tracking-wider mb-1">{selectedEvent.type} EVENT</span><h3 className="text-xl font-bold text-white leading-tight">{selectedEvent.title}</h3></div><button onClick={() => setSelectedEvent(null)} className="p-1 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"><X size={20} /></button></div>
+                      <div className="flex items-center gap-3 mb-6"><div className="px-3 py-1 rounded bg-slate-800 border border-white/10 text-white font-mono text-sm">{selectedEvent.day} {selectedEvent.date}</div><div className="flex items-center gap-1.5 text-slate-300 text-sm"><Clock size={14} className="text-amber-500" />{selectedEvent.time}</div></div>
+                      <div className="space-y-4"><div><span className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">{t.agenda.location}</span><div className="flex items-center gap-2 text-slate-200 text-sm"><MapPin size={14} className="text-slate-400" />{selectedEvent.location}</div></div><div><span className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">{t.agenda.desc}</span><p className="text-slate-300 text-sm leading-relaxed">{selectedEvent.desc}</p></div></div>
+                      <button onClick={() => setSelectedEvent(null)} className="w-full mt-8 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium border border-white/5 transition-all">{t.modals.close}</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {showUpgrade && (
+                <div className="fixed inset-0 z-[110] bg-slate-950/95 backdrop-blur-sm flex flex-col animate-fadeIn">
+                  <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-slate-900 sticky top-0 z-10"><h2 className="text-xl font-bold text-white tracking-wide">{t.membership.title}</h2><button onClick={() => setShowUpgrade(false)} className="p-2 rounded-full bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"><X size={24} /></button></div>
+                  <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+                    {membershipLevels.map((level) => (
+                      <div key={level.id} className={`relative w-full bg-slate-900 border ${level.color} rounded-2xl p-5 shadow-lg transition-transform ${level.current ? 'border-2 shadow-[0_0_20px_rgba(234,179,8,0.15)] bg-slate-800/50' : 'border-opacity-50'}`}>
+                        {level.current && (<div className="absolute top-0 right-0 bg-yellow-500 text-slate-900 text-[10px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl uppercase tracking-wider">{t.membership.current_plan}</div>)}
+                        <div className="mb-4"><h3 className="text-lg font-bold text-white mb-1">{level.name}</h3><p className={`text-xl font-bold ${level.current ? 'text-yellow-400' : 'text-slate-200'}`}>{level.price}</p></div>
+                        <ul className="space-y-2 mb-6">{level.features.map((feature, idx) => (<li key={idx} className="flex items-start gap-2 text-sm text-slate-300"><Check size={16} className={`mt-0.5 ${level.current ? 'text-yellow-500' : 'text-slate-500'}`} /><span className="leading-tight">{feature}</span></li>))}</ul>
+                        <button className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${level.current ? 'bg-slate-700 text-slate-400 cursor-default' : 'bg-white hover:bg-slate-200 text-slate-900 shadow-md active:scale-[0.98]'}`}>{level.current ? t.membership.active_plan : t.membership.upgrade}</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        // --- VISTA: INVERSIÓN (ROI & KPIs) ---
+        if (activeTab === SECTIONS.INVESTMENT.id) {
+
+          // Datos Mock Completos para Inversión Premium
+          const investmentStats = {
+            summary: {
+              invested: '€ 14,850',
+              value: '€ 35,640',
+              roi: '+140%',
+              multiplier: 'x2.4',
+              period: 'Temporada 2025-26',
+              trend: 'up'
+            },
+            roiBreakdown: [
+              { id: 1, label: t.investment.kpis.networking, value: 12500, percent: 35, icon: Users, color: 'text-blue-400', bg: 'bg-blue-500' },
+              { id: 2, label: t.investment.kpis.savings, value: 8200, percent: 23, icon: CreditCard, color: 'text-green-400', bg: 'bg-green-500' },
+              { id: 3, label: t.investment.kpis.events, value: 9500, percent: 27, icon: Calendar, color: 'text-amber-400', bg: 'bg-amber-500' },
+              { id: 4, label: t.investment.kpis.brand, value: 5440, percent: 15, icon: Award, color: 'text-purple-400', bg: 'bg-purple-500' }
+            ],
+            timeline: [
+              { month: 'Ago', value: 2000, milestone: 'Inicio' },
+              { month: 'Sep', value: 5500, milestone: null },
+              { month: 'Oct', value: 12000, milestone: 'El Clásico' },
+              { month: 'Nov', value: 15500, milestone: null },
+              { month: 'Dic', value: 18000, milestone: 'Cena Navidad' },
+              { month: 'Ene', value: 22500, milestone: null },
+              { month: 'Feb', value: 35640, milestone: 'Actual' }
+            ],
+            projection: {
+              estimated: '€ 52,000',
+              confidence: 'Alta',
+              growth: '+45%'
+            },
+            assets: [
+              { id: 1, name: 'Acceso Palco VIP', status: 'unlocked', icon: Crown },
+              { id: 2, name: 'Gestor Personal', status: 'unlocked', icon: UserCog },
+              { id: 3, name: 'Eventos Directiva', status: 'locked', icon: Shield, progress: 80 },
+              { id: 4, name: 'Viajes Equipo', status: 'locked', icon: MapPin, progress: 45 }
+            ],
+            benchmark: {
+              percentile: 15, // Top 15%
+              userScore: 88,
+              avgScore: 62
+            },
+            documents: [
+              { id: 1, name: 'Informe ROI Q1 2026', size: '2.4 MB', date: '15 Ene 2026' },
+              { id: 2, name: 'Certificado Membresía', size: '1.1 MB', date: '01 Ago 2025' }
+            ]
+          };
+
+          return (
+            <div className="flex flex-col w-full min-h-[75vh] animate-fadeIn pt-8 px-6 pb-24 text-slate-200">
+
+              {/* Header de Sección con Efecto Premium */}
+              <div className="mb-8 relative">
+                <div className="absolute top-0 left-0 w-12 h-12 bg-amber-500/20 rounded-full blur-xl pointer-events-none"></div>
+                <h2 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3 relative z-10">
+                  {t.investment.title}
+                  <span className="px-2 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-bold uppercase tracking-widest shadow-[0_0_10px_rgba(245,158,11,0.4)]">Premium</span>
+                </h2>
+                <p className="text-sm text-slate-400 mt-1 max-w-xs leading-relaxed">{t.investment.subtitle}</p>
+              </div>
+
+              {/* 1. BALANCE GENERAL (Investment vs Return) */}
+              <div className="w-full bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-6 shadow-2xl mb-6 relative overflow-hidden group hover:border-amber-500/30 transition-all duration-500">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none group-hover:bg-amber-500/10 transition-colors"></div>
+
+                <div className="relative z-10 flex flex-col gap-6">
+                  {/* Top Row: Multiplier Banner */}
+                  <div className="flex justify-between items-start">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mb-1">Rendimiento Total</span>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-black text-white tracking-tight">{investmentStats.summary.multiplier}</span>
+                        <span className="flex items-center gap-1 text-xs font-bold text-green-400 bg-green-950/50 px-2 py-1 rounded-full border border-green-500/20">
+                          <TrendingUp size={12} /> {investmentStats.summary.roi}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.4)] animate-pulse-slow">
+                      <Zap size={20} className="text-black fill-black" />
+                    </div>
+                  </div>
+
+                  <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
+
+                  {/* Bottom Row: Comparison */}
+                  <div className="grid grid-cols-2 gap-8 relative">
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[1px] h-full bg-slate-800"></div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-400 uppercase mb-1">Inversión Anual</span>
+                      <span className="text-lg font-bold text-slate-300">{investmentStats.summary.invested}</span>
+                    </div>
+                    <div className="flex flex-col items-end text-right">
+                      <span className="text-[10px] text-amber-500 font-bold uppercase mb-1">Valor Generado</span>
+                      <span className="text-xl font-bold text-white text-shadow-glow">{investmentStats.summary.value}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. DISTRIBUCIÓN DEL ROI */}
+              <div className="mb-8">
+                <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                  <PieChart size={18} className="text-amber-500" />
+                  Origen del Valor
+                </h3>
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+                  {/* Visual Bar Representation */}
+                  <div className="flex w-full h-4 rounded-full overflow-hidden mb-6 bg-slate-800">
+                    {investmentStats.roiBreakdown.map((item) => (
+                      <div key={item.id} style={{ width: `${item.percent}%` }} className={`h-full ${item.bg} relative group cursor-help transition-all hover:brightness-110`}></div>
+                    ))}
+                  </div>
+
+                  {/* Legend Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {investmentStats.roiBreakdown.map((item) => (
+                      <div key={item.id} className="flex items-start gap-3">
+                        <div className={`mt-1 w-2 h-2 rounded-full ${item.bg} shadow-[0_0_5px_currentColor]`}></div>
+                        <div>
+                          <span className="text-xs text-slate-400 block mb-0.5">{item.label}</span>
+                          <span className="text-sm font-bold text-white">€ {item.value.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. TIMELINE HISTÓRICO */}
+              <div className="mb-8 overflow-hidden">
+                <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                  <BarChart3 size={18} className="text-blue-400" />
+                  Evolución Mensual
+                </h3>
+                <div className="relative w-full h-48 bg-slate-900/50 border border-slate-800 rounded-2xl p-4 flex items-end justify-between gap-2 overflow-x-auto no-scrollbar">
+                  {/* Línea media decorativa */}
+                  <div className="absolute top-1/2 left-0 w-full h-[1px] bg-slate-800/50 border-t border-dashed border-slate-700 pointer-events-none"></div>
+
+                  {investmentStats.timeline.map((point, i) => {
+                    const heightPercent = Math.max(15, (point.value / 36000) * 100);
+                    return (
+                      <div key={i} className="flex flex-col items-center gap-2 group min-w-[30px] flex-1">
+                        {point.milestone && (
+                          <div className="absolute top-2 bg-slate-800 text-[8px] text-slate-300 px-2 py-1 rounded border border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                            {point.milestone}
+                          </div>
+                        )}
+                        <div className="relative w-full flex justify-center items-end h-32">
+                          <div
+                            style={{ height: `${heightPercent}%` }}
+                            className={`w-2 sm:w-4 rounded-t-sm transition-all duration-700 ${i === investmentStats.timeline.length - 1 ? 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-slate-700 group-hover:bg-slate-500'}`}
+                          ></div>
+                        </div>
+                        <span className={`text-[9px] font-bold uppercase ${i === investmentStats.timeline.length - 1 ? 'text-white' : 'text-slate-500'}`}>{point.month}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 4. PROYECCIÓN FUTURA */}
+              <div className="mb-8">
+                <div className="w-full bg-slate-900 border border-slate-800 border-l-4 border-l-purple-500 rounded-xl p-5 shadow-lg relative overflow-hidden">
+                  <div className="flex justify-between items-start relative z-10">
+                    <div>
+                      <h4 className="text-purple-400 text-xs font-bold uppercase tracking-wider mb-1 flex items-center gap-1"><Target size={12} /> Proyección 2026</h4>
+                      <span className="text-2xl font-bold text-white block mb-1">{investmentStats.projection.estimated}</span>
+                      <span className="text-[10px] text-slate-400">Basado en tendencias actuales</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-green-400 font-bold text-lg flex items-center justify-end gap-1">{investmentStats.projection.growth} <ArrowUpRight size={16} /></span>
+                      <span className="text-[10px] text-slate-500 block">Confianza: {investmentStats.projection.confidence}</span>
+                    </div>
+                  </div>
+                  {/* Background Pattern */}
+                  <div className="absolute -right-4 -bottom-10 opacity-10 text-purple-600">
+                    <TrendingUp size={100} />
+                  </div>
+                </div>
+              </div>
+
+              {/* 5. ACTIVOS DESBLOQUEADOS (Gamification) */}
+              <div className="mb-8">
+                <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                  <ShieldCheck size={18} className="text-green-400" />
+                  Estado de Activos
+                </h3>
+                <div className="space-y-3">
+                  {investmentStats.assets.map((asset) => (
+                    <div key={asset.id} className={`flex items-center justify-between p-4 rounded-xl border transition-all ${asset.status === 'unlocked' ? 'bg-slate-900 border-green-500/30' : 'bg-slate-950 border-slate-800 opacity-70'}`}>
+                      <div className="flex items-center gap-4">
+                        <div className={`p-2 rounded-lg ${asset.status === 'unlocked' ? 'bg-green-500/10 text-green-400' : 'bg-slate-800 text-slate-500'}`}>
+                          <asset.icon size={20} />
+                        </div>
+                        <div>
+                          <h4 className={`text-sm font-bold ${asset.status === 'unlocked' ? 'text-white' : 'text-slate-400'}`}>{asset.name}</h4>
+                          {asset.status === 'locked' && (
+                            <div className="w-24 h-1 bg-slate-800 rounded-full mt-2 overflow-hidden">
+                              <div style={{ width: `${asset.progress}%` }} className="h-full bg-slate-600"></div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        {asset.status === 'unlocked' ? (
+                          <span className="text-green-500"><CheckCircle size={20} fill="currentColor" className="text-black" /></span>
+                        ) : (
+                          <span className="text-slate-600"><Lock size={18} /></span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 6. BENCHMARK DE RENDIMIENTO */}
+              <div className="mb-8">
+                <div className="w-full bg-gradient-to-r from-slate-900 to-slate-800 p-1 rounded-2xl">
+                  <div className="bg-slate-950 rounded-xl p-5 flex items-center gap-5">
+                    <div className="relative w-16 h-16 flex-shrink-0">
+                      {/* Circular Progress Mock */}
+                      <svg className="w-full h-full transform -rotate-90">
+                        <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-slate-800" />
+                        <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent" strokeDasharray="175" strokeDashoffset={175 - (175 * investmentStats.benchmark.userScore / 100)} className="text-amber-500" />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center font-bold text-white text-sm">
+                        Top {investmentStats.benchmark.percentile}%
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-white font-bold text-sm mb-1">Rendimiento Élite</h4>
+                      <p className="text-xs text-slate-400 text-pretty">Tu uso de la membresía supera al {100 - investmentStats.benchmark.percentile}% de los socios.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 7. DOCUMENTACIÓN */}
+              <div className="mb-8">
+                <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                  <LucideFileText size={18} className="text-slate-400" /> Documentación
+                </h3>
+                <div className="grid grid-cols-1 gap-3">
+                  {investmentStats.documents.map((doc) => (
+                    <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-colors cursor-pointer group">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-slate-800 rounded text-red-500 group-hover:bg-white group-hover:text-red-600 transition-colors"><LucideFileText size={16} /></div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-slate-300 group-hover:text-white">{doc.name}</span>
+                          <span className="text-[10px] text-slate-500">{doc.date} • {doc.size}</span>
+                        </div>
+                      </div>
+                      <Download size={16} className="text-slate-500 group-hover:text-white" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 8. CTAS NO COMERCIALES */}
+              <div className="mt-4 flex flex-col gap-3">
+                <button onClick={() => handleStartChat(MANAGER_PROFILE)} className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-900 font-bold text-sm shadow-lg shadow-amber-900/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                  <UserCog size={18} /> Optimizar mi Inversión
+                </button>
+                <button onClick={() => setActiveTab(SECTIONS.BOOKINGS.id)} className="w-full py-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-medium text-sm border border-white/5 transition-all">
+                  Ver Oportunidades Exclusivas
+                </button>
+              </div>
+
+            </div>
+          );
+        }
+
+        // --- VISTA: TIENDA & LOYALTY (Barça Coins) ---
+        if (activeTab === SECTIONS.SHOP.id) {
+
+          // Datos Mock para Paquetes de Monedas (Revenue)
+          const coinPackages = [
+            { id: 1, amount: 500, price: '4.99€', tag: 'Starter', color: 'bg-slate-800' },
+            { id: 2, amount: 1500, price: '12.99€', tag: 'Popular', color: 'bg-blue-900/40 border-blue-500/50' },
+            { id: 3, amount: 5000, price: '39.99€', tag: 'Best Value', color: 'bg-gradient-to-br from-amber-900/40 to-slate-900 border-amber-500/50' },
+          ];
+          // Datos Mock para Ganar Monedas (Engagement)
+          const earnMethods = [
+            { id: 1, title: 'Asiste al Clásico', reward: '+500 ¢', icon: CalendarCheck, desc: 'Check-in en el estadio' },
+            { id: 2, title: 'Reserva Sala VIP', reward: '+200 ¢', icon: Briefcase, desc: 'Por cada reserva completada' },
+            { id: 3, title: 'Completa tu Perfil', reward: '+100 ¢', icon: UserCog, desc: 'Rellena tus preferencias' },
+          ];
+          // Productos Exclusivos canjeables
+          const exclusiveRewards = [
+            { id: 1, name: 'Camiseta Firmada 24/25', price: 15000, img: 'bg-blue-900' },
+            { id: 2, name: 'Meet & Greet Jugador', price: 50000, img: 'bg-amber-900' },
+            { id: 3, name: 'Entrada Museo Fast-Pass', price: 2500, img: 'bg-slate-800' },
+          ];
+          return (
+            <div className="flex flex-col w-full min-h-[75vh] animate-fadeIn pt-8 px-6 pb-24">
+
+              {/* Header de la Tienda */}
+              <div className="flex justify-between items-end mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white tracking-tight">{t.shop.title}</h2>
+                  <p className="text-sm text-slate-400">{t.shop.subtitle}</p>
+                </div>
+                {/* Selector de Pestaña Interna */}
+                <div className="flex bg-slate-900 rounded-lg p-1 border border-white/10">
+                  <button
+                    onClick={() => setShopTab('coins')}
+                    className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${shopTab === 'coins' ? 'bg-amber-500 text-black shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    {t.shop.tab_coins}
+                  </button>
+                  <button
+                    onClick={() => setShopTab('products')}
+                    className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${shopTab === 'products' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    {t.shop.tab_products}
+                  </button>
+                </div>
+              </div>
+              {/* --- VISTA: BARÇA COINS (Revenue & Loyalty) --- */}
+              {shopTab === 'coins' && (
+                <div className="animate-fadeIn">
+
+                  {/* Tarjeta de Saldo Principal */}
+                  <div className="w-full bg-gradient-to-r from-amber-500 to-yellow-600 rounded-2xl p-6 shadow-[0_0_30px_rgba(245,158,11,0.2)] mb-8 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+                    <div className="relative z-10 flex justify-between items-center">
+                      <div>
+                        <p className="text-amber-900 font-bold uppercase tracking-widest text-xs mb-1">{t.shop.balance_title}</p>
+                        <h3 className="text-5xl font-black text-white drop-shadow-sm flex items-baseline gap-2">
+                          {barcaCoins.toLocaleString()} <span className="text-2xl opacity-80">¢</span>
+                        </h3>
+                      </div>
+                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center border border-white/40">
+                        <Gem size={24} className="text-white" />
+                      </div>
+                    </div>
+                    <p className="relative z-10 text-amber-900/80 text-xs font-medium mt-2">
+                      {t.shop.balance_subtitle}
+                    </p>
+                  </div>
+                  {/* Sección: Comprar Monedas (Revenue) */}
+                  <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                    <CreditCard size={18} className="text-green-400" /> {t.shop.reload_title}
+                  </h3>
+                  <div className="grid grid-cols-3 gap-3 mb-8">
+                    {coinPackages.map((pkg) => (
+                      <button key={pkg.id} className={`relative p-4 rounded-xl border ${pkg.color} flex flex-col items-center justify-center transition-transform hover:scale-105 group`}>
+                        {pkg.tag && (
+                          <span className="absolute -top-2 bg-green-500 text-black text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
+                            {t.shop.tags[pkg.tag]}
+                          </span>
+                        )}
+                        <span className="text-xl font-black text-amber-400 mb-1">{pkg.amount} ¢</span>
+                        <span className="text-sm font-bold text-white group-hover:text-green-400 transition-colors">{pkg.price}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {/* Sección: Cómo Ganar (Engagement) */}
+                  <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                    <TrendingUp size={18} className="text-blue-400" /> {t.shop.earn_title}
+                  </h3>
+                  <div className="space-y-3 mb-8">
+                    {earnMethods.map((method) => (
+                      <div key={method.id} className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-slate-800 rounded-lg text-slate-400">
+                            <method.icon size={18} />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-white">{method.title}</h4>
+                            <p className="text-xs text-slate-500">{method.desc}</p>
+                          </div>
+                        </div>
+                        <span className="text-sm font-bold text-amber-500 bg-amber-900/20 px-2 py-1 rounded border border-amber-500/20">
+                          {method.reward}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* --- VISTA: PRODUCTOS (Canje) --- */}
+              {shopTab === 'products' && (
+                <div className="animate-fadeIn grid grid-cols-2 gap-4">
+                  {exclusiveRewards.map((item) => (
+                    <div key={item.id} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden group">
+                      <div className={`h-32 w-full ${item.img} relative`}>
+                        {/* Placeholder Imagen */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-30">
+                          <ShoppingBag size={32} className="text-white" />
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <h4 className="text-white font-bold text-sm mb-2 leading-tight">{item.name}</h4>
+                        <div className="flex justify-between items-center">
+                          <span className="text-amber-400 font-bold text-sm">{item.price.toLocaleString()} ¢</span>
+                          <button className="p-1.5 bg-white text-black rounded-lg hover:bg-amber-400 transition-colors">
+                            <Check size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        // Default fallback
+        return <div className="p-10 text-center text-slate-500">Sección en construcción</div>;
+      };
+
+      return (
+        <div className="min-h-screen bg-slate-950 text-slate-200 pb-20 font-sans selection:bg-amber-500/30">
+          <Header />
+          <main className="pt-[70px]">
+            {renderContent()}
+
+            {/* --- MODAL UNIFICADA DE MENSAJERÍA --- */}
+            {isMsgOpen && (
+              <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+                <div className="absolute inset-0" onClick={() => setIsMsgOpen(false)}></div>
+                <div className="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[600px] max-h-[80vh]">
+
+                  {/* --- VISTA CHAT ACTIVO --- */}
+                  {activeChat ? (
+                    <>
+                      {/* Header Chat */}
+                      <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-900">
+                        <div className="flex items-center gap-3">
+                          <button onClick={() => setActiveChat(null)} className="p-1 -ml-2 text-slate-400 hover:text-white transition-colors">
+                            <ChevronLeft size={24} />
+                          </button>
+                          <div className="relative">
+                            <img src={activeChat.image} className="w-10 h-10 rounded-full object-cover border border-slate-600" alt="Avatar" />
+                            <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-slate-900 ${activeChat.status === 'online' || isManagerAvailable() ? 'bg-green-500' : 'bg-slate-500'}`}></div>
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-white">{activeChat.name}</h3>
+                            <p className="text-xs text-slate-400">{activeChat.role}</p>
+                          </div>
+                        </div>
+                        <button onClick={() => setIsMsgOpen(false)} className="text-slate-400 hover:text-white"><X size={20} /></button>
+                      </div>
+
+                      {/* Cuerpo Chat */}
+                      <div className="flex-1 bg-slate-950/50 p-4 overflow-y-auto">
+                        <div className="flex justify-center mb-4"><span className="text-[10px] text-slate-600 uppercase font-bold tracking-wider">Hoy</span></div>
+
+                        {/* HISTORIAL COMPARTIDO (SOLO SI ES MANAGER O IA) */}
+                        {activeChat.id === 'manager-001' ? (
+                          <>
+                            {sharedMessages.map((msg) => (
+                              <div key={msg.id} className={`flex gap-3 mb-4 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}>
+                                <img
+                                  src={msg.sender === 'user' ? 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=100&q=80' : activeChat.image}
+                                  className="w-8 h-8 rounded-full object-cover"
+                                  alt="Avatar"
+                                />
+                                <div className={`rounded-2xl p-3 max-w-[80%] border ${msg.sender === 'user' ? 'bg-amber-600 border-amber-500 text-white rounded-br-none' : 'bg-slate-800 border-slate-700 rounded-bl-none text-slate-200'}`}>
+                                  <p className="text-sm">{msg.text}</p>
+                                  <span className="text-[10px] opacity-60 mt-1 block text-right">{msg.time}</span>
+                                </div>
+                              </div>
+                            ))}
+                            {isTyping && (
+                              <div className="flex gap-3 mb-4">
+                                <img src={activeChat.image} className="w-8 h-8 rounded-full object-cover self-end" alt="Avatar" />
+                                <div className="bg-slate-800 rounded-2xl rounded-bl-none p-3 border border-slate-700">
+                                  <span className="text-xs text-slate-400 animate-pulse">Escribiendo...</span>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          // CHAT NORMAL CON OTROS USUARIOS (NO HÍBRIDO)
+                          <div className="flex gap-3 mb-4">
+                            <img src={activeChat.image} className="w-8 h-8 rounded-full object-cover self-end" alt="Avatar" />
+                            <div className="bg-slate-800 rounded-2xl rounded-bl-none p-3 max-w-[80%] border border-slate-700">
+                              <p className="text-sm text-slate-200">
+                                Hola {userData.name.split(' ')[0]}, he recibido tu solicitud de contacto sobre "{activeChat.reason}". ¿En qué puedo ayudarte?
+                              </p>
+                              <span className="text-[10px] text-slate-500 mt-1 block text-right">Justo ahora</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Footer Chat: Quick Replies + Input */}
+                      <div className="bg-slate-900 border-t border-slate-800">
+                        {/* QUICK REPLIES (Solo para Manager/IA) */}
+                        {activeChat.id === 'manager-001' && (
+                          <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-auto no-scrollbar">
+                            {QUICK_REPLIES.map((reply, index) => (
+                              <button
+                                key={index}
+                                onClick={() => handleSendMessage(reply)}
+                                className="whitespace-nowrap bg-slate-800 text-slate-300 text-[10px] font-medium px-3 py-1.5 rounded-full border border-slate-700 hover:bg-slate-700 hover:text-white hover:border-slate-500 transition-colors"
+                              >
+                                {reply}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="p-3 flex gap-2">
+                          <input
+                            value={messageInput}
+                            onChange={(e) => setMessageInput(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                            placeholder={t.messages.placeholder_chat}
+                            className="flex-1 bg-slate-950 border border-slate-800 rounded-full px-4 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50 placeholder-slate-600"
+                          />
+                          <button onClick={() => handleSendMessage()} className="p-2 bg-amber-500 text-black rounded-full hover:bg-amber-400 transition-colors shadow-lg"><Send size={18} /></button>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    /* --- VISTA SELECCIÓN DE CONTACTO (INBOX) --- */
+                    <>
+                      <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-900">
+                        <h3 className="text-sm font-bold text-white tracking-wide uppercase">{t.messages.title}</h3>
+                        <button onClick={() => setIsMsgOpen(false)} className="text-slate-400 hover:text-white"><X size={20} /></button>
+                      </div>
+                      <div className="flex-1 bg-slate-950/50 p-4 overflow-y-auto">
+
+                        <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">{t.messages.support_management}</h4>
+
+                        {/* Opción Manager */}
+                        <div
+                          onClick={() => setActiveChat(MANAGER_PROFILE)}
+                          className="w-full bg-slate-900 border border-slate-800 hover:border-slate-600 rounded-xl p-3 flex items-center gap-3 mb-3 cursor-pointer transition-all shadow-md group"
+                        >
+                          <div className="relative">
+                            <img src={MANAGER_PROFILE.image} className="w-12 h-12 rounded-full object-cover border border-slate-700" alt="Manager" />
+                            <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-slate-900 ${isManagerAvailable() ? 'bg-green-500' : 'bg-slate-500'}`}></div>
+                          </div>
+                          <div className="flex-1">
+                            <h5 className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">{MANAGER_PROFILE.name}</h5>
+                            <p className="text-xs text-slate-400">{MANAGER_PROFILE.role}</p>
+                            <p className={`text-[10px] font-medium mt-0.5 ${isManagerAvailable() ? 'text-green-400' : 'text-slate-500'}`}>
+                              {isManagerAvailable() ? t.messages.manager_available : t.messages.manager_offline}
+                            </p>
+                          </div>
+                          <ChevronRight size={16} className="text-slate-600" />
+                        </div>
+
+                        {/* Opción IA */}
+                        <div
+                          onClick={() => { setIsMsgOpen(false); setShowAIAssistant(true); }}
+                          className="w-full bg-gradient-to-r from-cyan-900/20 to-slate-900 border border-cyan-900/30 hover:border-cyan-500/50 rounded-xl p-3 flex items-center gap-3 mb-6 cursor-pointer transition-all shadow-md group"
+                        >
+                          <div className="w-12 h-12 rounded-full bg-cyan-900/20 flex items-center justify-center border border-cyan-500/30 text-cyan-400 group-hover:scale-110 transition-transform">
+                            <Bot size={24} />
+                          </div>
+                          <div className="flex-1">
+                            <h5 className="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">{t.manager.bot.title}</h5>
+                            <p className="text-xs text-slate-400">{t.manager.bot.role}</p>
+                            <p className="text-[10px] text-cyan-500 font-medium mt-0.5 animate-pulse">{t.manager.bot.status}</p>
+                          </div>
+                          <ChevronRight size={16} className="text-slate-600" />
+                        </div>
+
+                        <div className="h-px bg-slate-800 w-full mb-4"></div>
+
+                        <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center justify-between">
+                          {t.messages.client_messages}
+                          <span className="bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded text-[9px]">0 {t.messages.new}</span>
+                        </h4>
+
+                        {/* Placeholder Clientes */}
+                        <div className="flex flex-col items-center justify-center py-8 text-slate-500 border border-dashed border-slate-800 rounded-xl">
+                          <Mail size={24} className="mb-2 opacity-50" />
+                          <p className="text-xs">{t.messages.no_pending}</p>
+                        </div>
+
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </main>
+
+          {/* --- MODAL UPGRADE MEMBRESÍA (Mejorar Plan) --- */}
+          {showUpgrade && (
+            <div className="fixed inset-0 z-[120] bg-black/90 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-6 animate-fadeIn" onClick={() => setShowUpgrade(false)}>
+              <div className="bg-slate-900 w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+                <div className="p-6 border-b border-white/5 flex items-center justify-between sticky top-0 bg-slate-900 z-10">
+                  <div className="flex items-center gap-2">
+                    <Crown size={24} className="text-amber-500" />
+                    <h2 className="text-xl font-bold text-white tracking-tight">{t.modals.upgrade_title}</h2>
+                  </div>
+                  <button onClick={() => setShowUpgrade(false)} className="p-2 bg-slate-800 rounded-full hover:bg-slate-700 transition-colors"><X size={20} className="text-slate-400" /></button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                  <p className="text-sm text-slate-400 mb-4">{t.modals.upgrade_desc}</p>
+                  {membershipLevels.map((level) => (
+                    <div key={level.id} className={`relative p-5 rounded-xl border ${level.current ? 'bg-slate-800/50 border-amber-500/50' : 'bg-slate-950 border-slate-800 hover:border-slate-600'} transition-all group`}>
+                      {level.current && (
+                        <div className="absolute top-0 right-0 bg-amber-500 text-black text-[10px] font-bold px-2 py-1 rounded-bl-lg rounded-tr-lg">ACTUAL</div>
+                      )}
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h3 className={`font-bold text-lg ${level.color ? level.color.replace('border-', 'text-') : 'text-white'}`}>{level.name}</h3>
+                          <p className="text-2xl font-black text-white mt-1">{level.price}</p>
+                        </div>
+                        <div className={`w-8 h-8 rounded-full border-2 ${level.color} flex items-center justify-center opacity-80`}>
+                          <Star size={14} className="text-white" fill="currentColor" />
+                        </div>
+                      </div>
+                      <ul className="space-y-2 mb-4">
+                        {level.features.map((feature, idx) => (
+                          <li key={idx} className="text-xs text-slate-300 flex items-center gap-2">
+                            <CheckCircle size={12} className="text-green-500" /> {feature}
+                          </li>
+                        ))}
+                      </ul>
+                      <button
+                        disabled={level.current}
+                        className={`w-full py-3 rounded-lg font-bold text-xs uppercase tracking-wider transition-all ${level.current ? 'bg-slate-800 text-slate-500 cursor-default' : 'bg-white text-black hover:bg-amber-500 hover:text-black hover:scale-[1.02]'}`}
+                      >
+                        {level.current ? 'Plan Actual' : 'Seleccionar Plan'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* --- MODAL CARNET DIGITAL (MINIMALISTA PREMIUM) --- */}
+          {showCard && (
+            <div className="fixed inset-0 z-[130] bg-black/95 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-6 animate-fadeIn" onClick={() => setShowCard(false)}>
+
+              <style>
+                {`
+                  @keyframes slideUpWallet {
+                    0% { transform: translateY(100%) scale(0.95); opacity: 0; }
+                    100% { transform: translateY(0) scale(1); opacity: 1; }
+                  }
+                  .animate-wallet-slide {
+                    animation: slideUpWallet 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+                  }
+                `}
+              </style>
+              {/* Contenedor Tarjeta */}
+              <div
+                className="relative w-full max-w-[320px] h-[550px] max-h-[85vh] bg-gradient-to-b from-[#0c1021] via-[#004D98] to-[#68002a] rounded-t-[30px] sm:rounded-[30px] shadow-[0_-10px_60px_rgba(0,0,0,0.8)] overflow-hidden border border-white/10 flex flex-col transform transition-all animate-wallet-slide mb-0 sm:mb-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+
+                {/* Fondo Decorativo Sutil */}
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute top-0 left-0 w-full h-2/3 bg-gradient-to-b from-black/40 to-transparent"></div>
+                  <div className="absolute -top-32 -right-32 w-80 h-80 bg-amber-500/10 rounded-full blur-[100px]"></div>
+                </div>
+
+                {/* Handle Superior */}
+                <div className="relative z-20 w-full flex justify-center pt-3 pb-1">
+                  <div className="w-10 h-1 bg-white/20 rounded-full"></div>
+                </div>
+
+                {/* CONTENIDO PRINCIPAL (Flex Column para espaciado perfecto) */}
+                <div className="relative z-10 flex flex-col h-full px-8 py-6 justify-between">
+
+                  {/* 1. BLOQUE SUPERIOR: ESCUDO Y NOMBRE */}
+                  <div className="flex flex-col items-center text-center gap-6 mt-4">
+                    {/* Escudo Monocromo/Dorado o Color sutil */}
+                    <img
+                      src="https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg"
+                      alt="FCB Crest"
+                      className="w-16 h-16 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+                    />
+
+                    <div className="flex flex-col gap-1">
+                      <p className="text-amber-500 text-[10px] font-bold uppercase tracking-[0.3em] mb-1">{t.wallet.business_member}</p>
+                      <h2 className="text-3xl font-black text-white uppercase tracking-tight leading-none drop-shadow-md">
+                        {userData.name}
+                      </h2>
+                    </div>
+                  </div>
+
+                  {/* 2. BLOQUE CENTRAL: NÚMERO DE SOCIO (Highlight) */}
+                  <div className="flex flex-col items-center justify-center py-4 border-y border-white/5 bg-white/5 rounded-xl backdrop-blur-sm">
+                    <span className="text-[9px] text-slate-400 uppercase tracking-[0.25em] mb-1">{t.wallet.member_number}</span>
+                    <span className="text-3xl font-mono font-bold text-amber-400 tracking-widest text-shadow-glow">
+                      {userData.memberId}
+                    </span>
+                  </div>
+
+                  {/* 3. BLOQUE INFERIOR: QR */}
+                  <div className="flex flex-col items-center pb-4">
+                    <div className="bg-white p-3 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.5)] relative">
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${userData.memberId}`}
+                        alt="QR Access"
+                        className="w-40 h-40 object-contain mix-blend-multiply"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm">
+                          <img src="https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg" className="w-5 h-5" alt="icon" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* --- MODAL PERFIL USUARIO (NUEVO) --- */}
+          {showProfile && (
+            <div className="fixed inset-0 z-[120] bg-black/90 backdrop-blur-sm flex items-center justify-center p-6 animate-fadeIn">
+              <div className="absolute inset-0" onClick={() => setShowProfile(false)}></div>
+              <div className="relative w-full max-w-sm bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+
+                {/* Header Perfil */}
+                <div className="relative h-32 bg-gradient-to-r from-[#004D98] to-[#A50044] p-6 flex justify-end items-start">
+                  <button onClick={() => setShowProfile(false)} className="p-2 bg-black/30 hover:bg-black/50 rounded-full text-white backdrop-blur-md transition-colors"><X size={20} /></button>
+                  <div className="absolute -bottom-10 left-6">
+                    <div className="w-24 h-24 rounded-full p-1 bg-slate-900">
+                      <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80" alt="Profile" className="w-full h-full rounded-full object-cover border-2 border-slate-700" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-12 pb-8 px-6">
+                  {/* Datos Identidad */}
+                  <div className="mb-6">
+                    <h2 className="text-2xl font-bold text-white leading-tight">{userData.name}</h2>
+                    <p className="text-amber-500 font-medium text-sm">{userData.position}</p>
+                    <p className="text-slate-400 text-sm flex items-center gap-1 mt-1"><Briefcase size={14} /> {userData.company}</p>
+                  </div>
+
+                  {/* Badges/Tags */}
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    <span className="px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                      <Crown size={12} /> Business Premium
+                    </span>
+                    <span className="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-bold uppercase tracking-wider">
+                      ID: {userData.memberId}
+                    </span>
+                  </div>
+
+                  {/* Bio */}
+                  <div className="mb-6">
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2"><LucideFileText size={14} /> {t.modals.description}</h3>
+                    <p className="text-slate-300 text-sm leading-relaxed">{userData.bio}</p>
+                  </div>
+
+                  {/* Intereses (NUEVO) */}
+                  {userData.interests && (
+                    <div className="mb-6">
+                      <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2"><Heart size={14} /> Intereses</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {userData.interests.map((interest, idx) => (
+                          <span key={idx} className="px-2 py-1 rounded-md bg-slate-800 text-slate-300 text-xs border border-white/5">{interest}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <button className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/5 text-slate-200 text-sm font-bold flex items-center justify-center gap-2 transition-all">
+                    <Edit size={16} /> {t.modals.edit_profile}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* --- MODAL AI ASSISTANT (GLOAL) --- */}
+          {showAIAssistant && (
+            <div className="fixed inset-0 z-[140] bg-slate-950/95 backdrop-blur-sm flex flex-col animate-fadeIn">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-cyan-900/30 bg-slate-900/50">
+                <div className="flex items-center justify-center"><div className="w-8 h-8 rounded-full bg-cyan-900/30 border border-cyan-500/50 flex items-center justify-center"><Bot size={16} className="text-cyan-400" /></div><span className="text-sm font-bold text-white tracking-wide ml-3">Barça Business Assistant</span></div>
+                <button onClick={() => setShowAIAssistant(false)} className="text-slate-400 hover:text-white"><X size={24} /></button>
+              </div>
+              <div className="flex-1 p-6 flex flex-col gap-4 overflow-y-auto">
+                {/* RENDERIZADO DE MENSAJES COMPARTIDOS */}
+                {sharedMessages.map((msg) => (
+                  <div key={msg.id} className={`flex gap-3 items-start max-w-[85%] ${msg.sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`}>
+                    {msg.sender === 'system' && (
+                      <div className="w-8 h-8 rounded-full bg-cyan-900/30 border border-cyan-500/50 flex items-center justify-center mt-1"><Bot size={14} className="text-cyan-400" /></div>
+                    )}
+                    <div className={`rounded-2xl p-4 shadow-sm border ${msg.sender === 'user' ? 'bg-cyan-600 border-cyan-500 text-white rounded-br-none' : 'bg-slate-800 border-white/5 rounded-tl-none'}`}>
+                      <p className="text-sm leading-relaxed">{msg.text}</p>
+                      <span className="text-[9px] opacity-60 mt-1 block text-right">{msg.time}</span>
+                    </div>
+                  </div>
+                ))}
+                {isTyping && (
+                  <div className="flex gap-3 items-start max-w-[85%]">
+                    <div className="w-8 h-8 rounded-full bg-cyan-900/30 border border-cyan-500/50 flex items-center justify-center mt-1"><Bot size={14} className="text-cyan-400" /></div>
+                    <div className="bg-slate-800 border border-white/5 rounded-2xl rounded-tl-none p-4 shadow-sm">
+                      <span className="text-xs text-slate-400 animate-pulse">Escribiendo...</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="bg-slate-900 border-t border-slate-800">
+                {/* QUICK REPLIES EN ASISTENTE IA */}
+                <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-auto no-scrollbar">
+                  {QUICK_REPLIES.map((reply, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSendMessage(reply)}
+                      className="whitespace-nowrap bg-slate-800 text-slate-300 text-[10px] font-medium px-3 py-1.5 rounded-full border border-slate-700 hover:bg-slate-700 hover:text-white hover:border-slate-500 transition-colors"
+                    >
+                      {reply}
+                    </button>
+                  ))}
+                </div>
+                <div className="p-4">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={messageInput}
+                      onChange={(e) => setMessageInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-full pl-5 pr-12 py-3.5 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-colors placeholder-slate-500"
+                      placeholder={t.messages.placeholder_ai}
+                    />
+                    <button onClick={() => handleSendMessage()} className="absolute right-2 top-1.5 p-2 bg-cyan-600 rounded-full text-white hover:bg-cyan-500 transition-colors"><Send size={16} /></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <nav className="fixed bottom-0 left-0 right-0 h-[80px] bg-slate-950/95 backdrop-blur-xl border-t border-white/5 z-50 pb-5">
+            <div className="max-w-md mx-auto h-full grid grid-cols-7 w-full px-0">
+              {Object.values(SECTIONS).map((section) => (
+                <div key={section.id} className="h-full w-full">
+                  <NavButton key={section.id} section={section} />
+                </div>
+              ))}
+            </div>
+          </nav>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+
+</html>
